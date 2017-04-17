@@ -30,7 +30,8 @@ extern "C"
 {
 #endif
 
-mxArray* MatlabArrayToMatlabByteStream(int a_nNumOfArgs, mxArray*a_Inputs[])
+#if 0
+mxArray* MatlabArrayToMatlabByteStreamMex(int a_nNumOfArgs, mxArray*a_Inputs[])
 {
 	mxArray* pcByteArray = NULL;
 	mxArray* pCellArray = mxCreateCellMatrix(1, a_nNumOfArgs);
@@ -47,11 +48,12 @@ mxArray* MatlabArrayToMatlabByteStream(int a_nNumOfArgs, mxArray*a_Inputs[])
 		mxSetCell(pCellArray, i, ppInputs[i]);
 	}
 
-	mexCallMATLAB(1, &pcByteArray, 1, &pCellArray, "getByteStreamFromArray");
+	mexCallMATLABWithTrap(1, &pcByteArray, 1, &pCellArray, "getByteStreamFromArray");
 	mxDestroyArray(pCellArray);
 
 	return pcByteArray;
 }
+#endif
 
 
 int32_ttt GetByteStreamLen(mxArray* a_matlabByteStream)
@@ -74,7 +76,6 @@ int32_ttt GetByteStreamLen(mxArray* a_matlabByteStream)
 
 	return 0;
 }
-
 
 #ifdef __cplusplus
 }

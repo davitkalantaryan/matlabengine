@@ -262,6 +262,7 @@
     <ClCompile Include="..\..\..\src\util\matlab_bytestream_routines.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlebase.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlemex.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlemexbase.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_serializer.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_pipe_name.cpp" />
   </ItemGroup>
@@ -275,6 +276,7 @@
     <ClInclude Include="..\..\..\include\matlab_bytestream_routines.h" />
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlebase.hpp" />
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlemex.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_engine_mathandlemexbase.hpp" />
     <ClInclude Include="..\..\..\include\matlab_engine_serializer.hpp" />
     <ClInclude Include="..\..\..\include\matlab_pipe_name.h" />
     <ClInclude Include="..\..\..\include\namedpipebase.h" />

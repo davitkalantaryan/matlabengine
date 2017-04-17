@@ -73,24 +73,4 @@ private:
 
 }}
 
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-#ifndef NOT_USE_MATLAB
-#include <mex.h>
-
-mxArray*	MatlabArrayToMatlabByteStream(int numOfArgs, mxArray*a_Inputs[]);
-int32_ttt	GetByteStreamLen(mxArray* a_matlabByteStream);
-
-#endif  // #ifndef NOT_USE_MATLAB
-
-#ifdef __cplusplus
-}
-#endif
-
-
 #endif // #ifndef __matlab_engine_serializer_hpp__
-

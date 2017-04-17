@@ -13,12 +13,17 @@
  */
 
 #include "matlab_engine_serverbase.hpp"
+#include "matlab_bytestream_routines.h"
 
 #ifdef WIN32
 #else  // #ifdef WIN32
 #define SIGNAL_ARGUMENTS    int a_nSigNum, siginfo_t * /*a_pSigInfo*/, void *
 typedef void(*TYPE_SIG_HANDLER)(SIGNAL_ARGUMENTS);
 #endif // #ifdef WIN32
+
+#ifndef _SOCKET_TIMEOUT_
+#define	_SOCKET_TIMEOUT_		-2001
+#endif
 
 matlab::engine::ServerBase::ServerBase(
 	TypeRecvFunc a_funcReceive, TypeSenderFunc a_funcSend,
@@ -43,6 +48,7 @@ matlab::engine::ServerBase::~ServerBase()
 
 int matlab::engine::ServerBase::StartServer(void)
 {
+	if (m_nRun != 0) { return 0; }
 	m_resourceThread = std::thread(&matlab::engine::ServerBase::ResourceThread, this);
 	m_serverThread = std::thread(&matlab::engine::ServerBase::ServerThread, this);
 	return 0;
@@ -51,6 +57,7 @@ int matlab::engine::ServerBase::StartServer(void)
 
 void  matlab::engine::ServerBase::StopServer(void)
 {
+	if (m_nRun == 0) { return; }
 	SResourceJob newJob;
 	m_nRun = 0;
 	StopServerPrivate();
@@ -60,6 +67,12 @@ void  matlab::engine::ServerBase::StopServer(void)
 	m_jobQueuee.AddElement(newJob);
 	m_semaphoreForResource.post();
 	m_resourceThread.join();
+}
+
+
+int matlab::engine::ServerBase::GetRun()
+{
+	return m_nRun;
 }
 
 
@@ -161,11 +174,13 @@ void matlab::engine::ServerBase::ContactThread(struct SConnectionItem* a_item)
 	while (m_nRun && a_item->run)
 	{
 		nReadReturn = (*m_fpReceive)(a_item->senderReceiver,&aInfo, 8, TIMEOUT_TIME_MS);
-		if (nReadReturn != 8) { break; }
+		
+		if (nReadReturn == _SOCKET_TIMEOUT_) { continue; }
+		else if (nReadReturn != 8) { break; }
 
 		switch (aInfo.overallMin8)
 		{
-		case CLIENT_REQ_TYPES::MATLAB_PIPE_CLOSE:
+		case CLIENT_REQ_TYPES::CLOSE:
 			a_item->run = 0;
 			break;
 		default:  // default is calling matlab routine
@@ -186,22 +201,17 @@ void matlab::engine::ServerBase::ContactThread(struct SConnectionItem* a_item)
 void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 {
 	struct SConnectionItem* pItem = (struct SConnectionItem*)a_arg;
-	int nReturn(-1);
 	const char* cpcInfoOrError = "Error";
-	int i;
 	const u_char_ttt* pRetBuffer = NULL;
-	int32_ttt  retBufLen = 0;
-	mxArray* pSerializedInputCell;
-	mxArray* pInputCell = NULL;
 	mxArray* pSerializedOutputCell = NULL;
 	mxArray* pReturnFromCallMatlab = NULL;
 	mxArray* vInputs[MAXIMUM_NUMBER_OF_IN_AND_OUTS];
 	mxArray* vOutputs[MAXIMUM_NUMBER_OF_IN_AND_OUTS];
-	void* pSerializedData;
+	int nReturn(-1);
 	int nInputs;
 	int nOutputs;
-	char vcDebug[256];
-
+	int nIsAnsExist = 0;
+	int32_ttt  retBufLen = 0;
 	int32_ttt nBSL;
 
 	m_pCurrentItem = pItem;
@@ -221,51 +231,54 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 	if (pItem->serializer.InOutBytesNumber() <= 0) { goto returnPoint; }
 	try {
 		nBSL = pItem->serializer.InOutBytesNumber();
-		snprintf(vcDebug, 255, "fprintf(1,'nBSL=%d\n');drawnow;", (int)nBSL);
-		m_pMatHandle->mexEvalStringWithTrap(vcDebug);
-		pSerializedInputCell = m_pMatHandle->mxCreateNumericMatrixC(1, pItem->serializer.InOutBytesNumber(), mxUINT8_CLASS, mxREAL);
-		if (!pSerializedInputCell) {/*report*/goto returnPoint; }
-		pSerializedData = m_pMatHandle->mxGetData(pSerializedInputCell);
-		memcpy(pSerializedData, pItem->serializer.InputsOrOutputs(), nBSL);
 
-		pReturnFromCallMatlab = m_pMatHandle->mexCallMATLABWithTrapC(1, &pInputCell, 1, &pSerializedInputCell, "getArrayFromByteStream");
-		if (pReturnFromCallMatlab) { goto exceptionPoint; }
-		if (!pInputCell) {/*report*/goto returnPoint; }
+		nInputs = m_pMatHandle->HandleIncomData(
+			vInputs, MAXIMUM_NUMBER_OF_IN_AND_OUTS,
+			pItem->serializer.InputsOrOutputs(), nBSL);
 
-		nInputs = (int)mxGetN(pInputCell);
-		//nInputs *= (int)mxGetM(pInputCell);
-		nInputs = nInputs > MAXIMUM_NUMBER_OF_IN_AND_OUTS ?
-			MAXIMUM_NUMBER_OF_IN_AND_OUTS : nInputs;
+		if (nInputs < 0) { goto returnPoint; }
+
 		nOutputs = pItem->serializer.NumOfExpOutsOrError() > MAXIMUM_NUMBER_OF_IN_AND_OUTS ?
 			MAXIMUM_NUMBER_OF_IN_AND_OUTS : pItem->serializer.NumOfExpOutsOrError();
 
-		if ((nInputs == 0) && (nOutputs == 0)) // eval string is called
+		if (((nInputs == 0) && (nOutputs<2)) || (nOutputs == 0)) // try any remaining outs
 		{
-			pReturnFromCallMatlab = m_pMatHandle->mexEvalStringWithTrap(pItem->serializer.MatlabScriptName());
+			vOutputs[0] = m_pMatHandle->newGetVariable("base", "ans");
+			if (vOutputs[0])
+			{
+				nIsAnsExist = 1;
+				m_pMatHandle->newEvalStringWithTrap("old__ans=ans;clear ans");
+			}
+		}
+
+		if ((nInputs == 0) && (nOutputs<2)) // eval string is called
+		{
+			pReturnFromCallMatlab = m_pMatHandle->newEvalStringWithTrap(pItem->serializer.MatlabScriptName());
 		}
 		else
 		{
-			for (i = 0; i < nInputs; ++i) { vInputs[i] = m_pMatHandle->mxGetCellC(pInputCell, i); }
-			pReturnFromCallMatlab = m_pMatHandle->mexCallMATLABWithTrapC(nOutputs, vOutputs, nInputs, vInputs, pItem->serializer.MatlabScriptName());
+			pReturnFromCallMatlab = m_pMatHandle->newCallMATLABWithTrap(nOutputs, vOutputs, 
+				nInputs, vInputs, pItem->serializer.MatlabScriptName());
+		}
+
+		if (((nInputs == 0) && (nOutputs<2)) || (nOutputs == 0)) // try any remaining outs
+		{
+			vOutputs[0] = m_pMatHandle->newGetVariable("base", "ans");
+			if (vOutputs[0]) { nOutputs = 1; }
+			else if (nIsAnsExist){ m_pMatHandle->newEvalStringWithTrap("ans=old__ans;"); }
+			if (nIsAnsExist) { m_pMatHandle->newEvalStringWithTrap("clear old__ans"); }
 		}
 
 		if (pReturnFromCallMatlab)
 		{
-		exceptionPoint:
-			pSerializedOutputCell = MatlabArrayToMatlabByteStream(1, &pReturnFromCallMatlab);
-			if (!pSerializedOutputCell) { goto returnPoint; }
-			pRetBuffer = (const u_char_ttt*)mxGetData(pSerializedOutputCell);
-			retBufLen = GetByteStreamLen(pSerializedOutputCell);
+			pSerializedOutputCell = m_pMatHandle->MatlabArrayToMatlabByteStream(1, &pReturnFromCallMatlab);
 			goto returnPoint;
 		}
 
-		pSerializedOutputCell = MatlabArrayToMatlabByteStream(nOutputs, vOutputs);
+		pSerializedOutputCell = m_pMatHandle->MatlabArrayToMatlabByteStream(nOutputs, vOutputs);
 		if (!pSerializedOutputCell) { goto returnPoint; }
-		pRetBuffer = (const u_char_ttt*)mxGetData(pSerializedOutputCell);
-		retBufLen = GetByteStreamLen(pSerializedOutputCell);
 		nReturn = 0;
 		cpcInfoOrError = "OK";
-		m_pMatHandle->mexEvalStringWithTrap("drawnow");
 
 	}
 	catch (...)
@@ -274,17 +287,21 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 	}
 
 returnPoint:
+	if (pSerializedOutputCell){
+		pRetBuffer = (const u_char_ttt*)mxGetData(pSerializedOutputCell);
+		retBufLen = GetByteStreamLen(pSerializedOutputCell);
+	}else { pRetBuffer = (const u_char_ttt*)""; retBufLen = 0; }
+	
 	if (pReturnFromCallMatlab)
 	{
-		m_pMatHandle->mexFrprint(STDPIPES::STDERR,
+		m_pMatHandle->newFrprint(STDPIPES::STDERR,
 			"Error during calling script by request from remote.\\n"
 			"script name is \"%s\"\\n", pItem->serializer.MatlabScriptName());
 	}
 	pItem->serializer.SetSendParams(cpcInfoOrError, pRetBuffer, retBufLen, nReturn);
 	m_fpSend(pItem->senderReceiver, pItem->serializer.GetOverAllBufferForSend(), pItem->serializer.OverAllMinus8Byte() + 8);
 	pItem->mutexForBuffers.unlock();
-	if (pSerializedInputCell) { m_pMatHandle->mxDestroyArray(pSerializedInputCell); }
-	m_pMatHandle->mexEvalStringWithTrap("drawnow");
+	m_pMatHandle->newEvalStringWithTrap("drawnow");
 #ifdef WIN32
 #else  // #ifdef WIN32
 	sigaction(SIGPIPE, &sigActionOld,NULL);

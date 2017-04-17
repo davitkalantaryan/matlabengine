@@ -22,7 +22,6 @@ public:
 	ServerTcpMex();
 	virtual ~ServerTcpMex();
 
-private:
 	int		StartServer(void) __OVERRIDE__;
 	void	StopServer(void) __OVERRIDE__;
 

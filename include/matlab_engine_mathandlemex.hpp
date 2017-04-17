@@ -10,42 +10,27 @@
 #ifndef __matlab_engine_mathandlemex_hpp__
 #define __matlab_engine_mathandlemex_hpp__
 
-#include "matlab_engine_mathandlebase.hpp"
-#include <common_fifofast.hpp>
+#include "matlab_engine_mathandlemexbase.hpp"
 
 namespace matlab{ namespace engine{
 
-struct SLsnCallbackItem { void*arg;TypeClbK clbk;};
 
-class MatHandleMex : public MatHandleBase
+class MatHandleMex : public MatHandleMexBase
 {
 public:
 	MatHandleMex();
 	virtual ~MatHandleMex();
 
-	void Start();
-	void Stop();
+	void Start() __OVERRIDE__;
+	void Stop() __OVERRIDE__;
 
-	mxArray* mexEvalStringWithTrap(const char* stringToEval);
-	mxArray *mxCreateNumericMatrixC(size_t m, size_t n, mxClassID classid, mxComplexity flag);
-	void *mxGetData(const mxArray *pa);
-	mxArray	*mexCallMATLABWithTrapC(
-		int         nlhs,       /* number of expected outputs */
-		mxArray     *plhs[],    /* pointer array to outputs */
-		int         nrhs,       /* number of inputs */
-		mxArray     *prhs[],    /* pointer array to inputs */
-		const char  *fcn_name   /* name of function to execute */
-	);
-	mxArray *mxGetCellC(const mxArray *pa, size_t i);
-	void mxDestroyArray(mxArray *pa);
-	void CallOnMatlabThread(void* owner, TypeClbK fpClb,void*arg);
+	void CallOnMatlabThread(void* owner, TypeClbK fpClb,void*arg) __OVERRIDE__;
 
 private:
 	static void* ListenerCallbackStatic(void* a_arg);
 
 private:
-	void*									m_pListener;
-	common::FifoFast<SLsnCallbackItem, 8>	m_fifoJobs;
+	void*			m_pListener;
 
 };
 

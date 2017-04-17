@@ -10,13 +10,13 @@
 #ifndef __fifofast_tos__
 #define __fifofast_tos__
 
-#ifndef FIFOFAST_H
+#ifndef __COMMON_FIFOFAST_HPP__
 #ifndef DEVELOPMENT
 #error This file should be included only from fifofast.h
 #else
 #include "common_fifofast.hpp"
 #endif  // #ifndef DEVELOPMENT
-#endif  // #ifndef FIFOFAST_H
+#endif  // #ifndef __COMMON_FIFOFAST_HPP__
 
 
 //////////////////////////////////////////////////////////////

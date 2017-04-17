@@ -14,7 +14,9 @@
 #ifndef __matlab_engine_serverbase_hpp__
 #define __matlab_engine_serverbase_hpp__
 
+#ifndef TIMEOUT_TIME_MS
 #define TIMEOUT_TIME_MS				20000
+#endif
 #define	CASH_AND_MAX_QUEUEE_SIZE	16
 
 #include "matlab_engine_serializer.hpp"
@@ -24,6 +26,7 @@
 #include <memory.h>
 #include <common_unnamedsemaphorelite.hpp>
 #include <common_fifofast.hpp>
+#include "matlab_pipe_name.h"
 
 namespace matlab{ namespace engine{
 
@@ -31,7 +34,7 @@ typedef int (*TypeRecvFunc)(void*receiver,void*buffer, int bufSize, long timeout
 typedef int(*TypeSenderFunc)(void*sender, const void*buffer, int bufSize);
 typedef void(*TypeCloseFunc)(void*senderReceiver);
 
-namespace CLIENT_REQ_TYPES { enum { MATLAB_PIPE_CLOSE }; }
+namespace CLIENT_REQ_TYPES { enum { CLOSE=MATLAB_PIPE_CLOSE_DEF}; }
 namespace RESRC_REQ_TYPES { enum { FINISH_LOOP, NEW_CLIENT, DELETE_CLIENT}; }
 
 class ServerBase
@@ -46,6 +49,8 @@ public:
 public: // These functions should be called in MATLAB run thread
 	virtual int StartServer(void); // !=0 is error, and system will not be started
 	virtual void StopServer(void);
+
+	int GetRun();
 
 protected:
 	void AddClient(void* client);

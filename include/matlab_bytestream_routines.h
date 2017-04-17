@@ -44,7 +44,7 @@ extern "C"
 {
 #endif
 
-mxArray*	MatlabArrayToMatlabByteStream(int numOfArgs, mxArray*a_Inputs[]);
+//mxArray*	MatlabArrayToMatlabByteStreamMex(int numOfArgs, mxArray*a_Inputs[]);
 int32_ttt	GetByteStreamLen(mxArray* a_matlabByteStream);
 
 #ifdef __cplusplus

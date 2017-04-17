@@ -9,16 +9,19 @@
 #ifndef __matlab_pipe_name_h__
 #define __matlab_pipe_name_h__
 
+#ifndef getpid_gettid_defined
 #ifdef WIN32
 #include <windows.h>
 #ifdef getpid
 #undef getpid
 #endif
-#define getpid GetCurrentProcessId
+#define getpid	GetCurrentProcessId
+#define	gettid	GetCurrentThreadId
 #else
 #include <sys/types.h>
 #include <unistd.h>
 #endif
+#endif // #ifndef getpid_gettid_defined
 
 #define	MAX_TRY_NUMBERS			5
 #define MATLAB_BIND_PORT_NUMBER	9183
@@ -30,7 +33,7 @@
 
 #ifndef MATLAB_PIPE_COMMANDS
 
-#define		MATLAB_PIPE_CLOSE		-1
+#define		MATLAB_PIPE_CLOSE_DEF		-1
 //#define		MATLAB_PIPE_NEW_DATA	1 >0
 //#define		MATLAB_MEX_EVAL_STRING	-2
 

@@ -57,8 +57,9 @@
 #endif
 #endif
 
-
+#ifndef _SOCKET_TIMEOUT_
 #define	_SOCKET_TIMEOUT_		-2001
+#endif
 #define	_NEGATIVE_ERROR_(x)		(((x)>0) ? -(x) : (x))
 #define	_EINTR_ERROR_			_NEGATIVE_ERROR_(EINTR)
 
