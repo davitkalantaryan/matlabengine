@@ -7,6 +7,8 @@
  *
  */
 
+#define NO_RECEIVE	-10
+
 #include <mex.h>
 #include <string.h>
 #include <malloc.h>
@@ -44,8 +46,9 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	mxArray* pcByteArray(NULL);
 	mxArray** ppInputs = const_cast<mxArray**>(a_Inputs);
     matlab::engine::SDataHeader aInfo;
-    int nReceived,nAdrStrLenPlus15;
+    int i,nReceived,nAdrStrLenPlus15;
     int32_ttt nBSL;
+	//long lnTimeout;
 
 	if (!s_nInited) {
 		ASocketB::Initialize();
@@ -138,7 +141,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 		}
 		return;
 	}
-	else if (strncmp("--receieve", pcScriptName, nAdrStrLenPlus15) == 0) {
+	else if (strncmp("--receive", pcScriptName, nAdrStrLenPlus15) == 0) {
 		if (s_pCurrentConnect->isJobActive) { goto recieveResult; }
 		else { mexPrintf("No running job!\n"); return; }
 	}
@@ -161,14 +164,18 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	s_pCurrentConnect->socketTcp.SendData(s_serializeDes.GetOverAllBufferForSend(), 
 		s_serializeDes.OverAllMinus8Byte() + 8);
 	s_pCurrentConnect->isJobActive = true;
+
+	if (s_pCurrentConnect->timeoutMS == NO_RECEIVE) 
+	{
+		goto returnWithTimeout; 
+	}
 	
 	// receive answer
 recieveResult:
 	nReceived= s_pCurrentConnect->socketTcp.RecvData(&aInfo, 8, s_pCurrentConnect->timeoutMS);
 	if (nReceived == _SOCKET_TIMEOUT_)
 	{
-		mexPrintf("job is sent to %s. later on call remote_call('%s','--recieve-result')   in order to get the result\n",
-			s_pCurrentConnect->serverName.c_str(), s_pCurrentConnect->serverName.c_str());
+		goto returnWithTimeout;
 	}
 	else if (nReceived != 8)
 	{
@@ -193,6 +200,14 @@ recieveResult:
 		}
 	} // else if (aInfo.overallMin8 > 0)
 
+	return;
+returnWithTimeout:
+
+	for (i = 0; i < a_nNumOuts; ++i)
+	{
+		a_Outputs[i] = mxCreateString("job_active");
+	}
+
 }
 
 
@@ -200,11 +215,11 @@ static void PrintHelp(void)
 {
 	mexPrintf("provide DOOCS address as string argument and the array \n"
 		"Options are following:\n"
-		"\t--debug      : makes this MEX file more verbose\n"
-		"\t--no-debug   : makes this MEX file less verbose\n"
-		"\t--help       : prints this help\n"
+		"\t--debug             : makes this MEX file more verbose\n"
+		"\t--no-debug          : makes this MEX file less verbose\n"
+		"\t--help              : prints this help\n"
 		"\thostname,--timeout       : gets or sets timeout\n"
-		"\thostname,--recieve-result: resieves the result of already set task\n"
+		"\thostname,--receive       : resieves the result of already set task\n"
 	);
 }
 
