@@ -32,7 +32,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	static int snAtExitRegistered = 0;
 	int nError(0);
 
-	mexPrintf("Version=16, pid=%d\n",(int)_getpid());
+	mexPrintf("Version=16\n");
 
 	if (a_nNumInps   && mxIsChar(a_Inputs[0]))
 	{
@@ -43,13 +43,13 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 			return;
 		}
 
-		if (strcmp(pcOption, "debug") == 0){ s_nDebug = 1; }
-		else if (strcmp(pcOption, "no-debug") == 0){ s_nDebug = 0; }
-		else if (strcmp(pcOption, "lock") == 0){ if (!mexIsLocked()){ mexLock(); } }
-		else if (strcmp(pcOption, "unlock") == 0){ if (mexIsLocked()){ mexUnlock(); } }
-		else if (strcmp(pcOption, "diary-on") == 0){ mexPrintf("Not implemented!!\n"); }
-		else if (strcmp(pcOption, "diary-off") == 0){ mexPrintf("Not implemented!!\n"); }
-		else if (strcmp(pcOption, "help") == 0){ PrintHelp(); }
+		if (strcmp(pcOption, "--debug") == 0){ s_nDebug = 1; }
+		else if (strcmp(pcOption, "--no-debug") == 0){ s_nDebug = 0; }
+		else if (strcmp(pcOption, "--lock") == 0){ if (!mexIsLocked()){ mexLock(); } }
+		else if (strcmp(pcOption, "--unlock") == 0){ if (mexIsLocked()){ mexUnlock(); } }
+		else if (strcmp(pcOption, "--diary-on") == 0){ mexPrintf("Not implemented!!\n"); }
+		else if (strcmp(pcOption, "--diary-off") == 0){ mexPrintf("Not implemented!!\n"); }
+		else if (strcmp(pcOption, "--help") == 0){ PrintHelp(); }
 
 		if (a_nNumOuts){ a_Outputs[0] = mxCreateString(""); }
 		return;
@@ -72,9 +72,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	if (nError){a_Outputs[0] = mxCreateString("Error during processing mex file!");}
 	else 
 	{
-		char vcBuffer[32];
-		_snprintf(vcBuffer, 31, "%d", (int)_getpid());
-		a_Outputs[0] = mxCreateString(vcBuffer);
+		if (a_nNumOuts) { a_Outputs[0] = mxCreateString(""); }
 	}
 
 }
@@ -84,13 +82,13 @@ static void PrintHelp(void)
 {
 	mexPrintf("provide DOOCS address as string argument and the array \n"
 		"Options are following:\n"
-		"\tdebug      : makes this server more verbose\n"
-		"\tno-debug   : makes this server less verbose\n"
-		"\tlock       : locks the mex file for accidentally not unloading from MATLAB (by default locked)\n"
-		"\tunlock     : unlocks the mex file, then 'clear all' or 'clear matlab_pipe_server'\n"
-		"\t             will unload pipe server from MATLAB workspace\n"
-		"\tdiary-on   : Prepares the pipe\n"
-		"\tdiary-off  : Destroys the pipe\n");
+		"\t--debug      : makes this server more verbose\n"
+		"\t--no-debug   : makes this server less verbose\n"
+		"\t--lock       : locks the mex file for accidentally not unloading from MATLAB (by default locked)\n"
+		"\t--unlock     : unlocks the mex file, then 'clear all' or 'clear matlab_pipe_server'\n"
+		"\t\t             will unload pipe server from MATLAB workspace\n"
+		"\t--diary-on   : Prepares the pipe\n"
+		"\t--diary-off  : Destroys the pipe\n");
 }
 
 

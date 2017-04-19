@@ -74,8 +74,10 @@ static int RecvFuncStatic(void* a_receiver, void* a_buffer, int a_bufSize, long 
 {
 	int nReturn;
 	ASocketTCP aSocket;
+	long lnClientSmallTiomeout = a_timeoutMs < 0 ? SMALL_TIMEOUT_MS : a_timeoutMs;
+	
 	aSocket.SetSockDescriptor((int)((size_t)a_receiver));
-	nReturn = aSocket.RecvData(a_buffer, a_bufSize, a_timeoutMs, a_timeoutMs);
+	nReturn = aSocket.RecvData(a_buffer, a_bufSize, a_timeoutMs, lnClientSmallTiomeout);
 	aSocket.SetSockDescriptor(-1);
 	return nReturn;
 }

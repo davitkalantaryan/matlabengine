@@ -266,6 +266,7 @@
     <ClInclude Include="..\..\..\include\matlab_bytestream_routines.h" />
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlebase.hpp" />
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlemexbase.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_engine_serializer.hpp" />
     <ClInclude Include="..\..\..\src\client\matlab_engine_clienttcp.hpp" />
   </ItemGroup>
   <ItemGroup>

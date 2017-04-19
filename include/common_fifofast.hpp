@@ -18,11 +18,11 @@
 
 namespace common{
 
+template <typename TypeS>struct SListStr{SListStr*   m_pNext;TypeS       m_tValue;};
+
 template <typename Type>
 class FifoFast_base
 {
-protected:
-	template <typename TypeS>struct SListStr{SListStr*   m_pNext;TypeS       m_tValue;};
 public:
 	FifoFast_base(int maxSize, int cashSize, SListStr<Type>**ppCashedEntries);
 	virtual ~FifoFast_base();

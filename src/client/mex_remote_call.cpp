@@ -41,17 +41,22 @@ static std::map<std::string,SConnectItem*>	s_mpConnections;
 void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	int a_nNumInps, const mxArray*a_Inputs[])
 {
-	matlab::engine::SDataHeader aInfo;
-	int nReceived,nAdrStrLenPlus15;
 	mxArray* pcByteArray(NULL);
 	mxArray** ppInputs = const_cast<mxArray**>(a_Inputs);
+    matlab::engine::SDataHeader aInfo;
+    int nReceived,nAdrStrLenPlus15;
+    int32_ttt nBSL;
 
 	if (!s_nInited) {
 		ASocketB::Initialize();
+#ifdef CPP11DEFINED
 		mexAtExit([]() {
 			if (s_nDebug) { mexPrintf("matlab_pipe_server:AtExit called!\n"); }
 			if (!s_nInited) { CleanMexFile(); s_nInited = 0; }
 		});
+#else // #ifdef CPP11DEFINED
+        mexAtExit(CleanMexFile);
+#endif // #ifdef CPP11DEFINED
 		s_nInited= 1;
 	}
 
@@ -103,6 +108,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 		if (nRet != 0)
 		{
 			delete s_pCurrentConnect;
+			s_pCurrentConnect = NULL;
 			mexPrintf("Unable to connect {%s:%d}\n", pcAddressOrHost, nPid);
 			return;
 		}
@@ -132,7 +138,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 		}
 		return;
 	}
-	else if (strncmp("--recieve-result", pcScriptName, nAdrStrLenPlus15) == 0) {
+	else if (strncmp("--receieve", pcScriptName, nAdrStrLenPlus15) == 0) {
 		if (s_pCurrentConnect->isJobActive) { goto recieveResult; }
 		else { mexPrintf("No running job!\n"); return; }
 	}
@@ -145,7 +151,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 		return;
 	}
 
-	int32_ttt nBSL = GetByteStreamLen(pcByteArray);
+    nBSL = GetByteStreamLen(pcByteArray);
 	if (s_nDebug) { mexPrintf("BSL=%d\n", (int)nBSL); }
 
 	s_serializeDes.SetSendParams(pcScriptName,
@@ -169,6 +175,7 @@ recieveResult:
 		s_mpConnections.erase(s_pCurrentConnect->serverName);
 		s_pCurrentConnect->socketTcp.Close();
 		delete s_pCurrentConnect;
+		s_pCurrentConnect = NULL;
 		mexErrMsgTxt("Error durring calling script in the remote host");
 		return;
 	}
@@ -204,6 +211,10 @@ static void PrintHelp(void)
 
 static void CleanMexFile(void)
 {
+    if (!s_nInited) { return;}
+
+    if (s_nDebug) { mexPrintf("matlab_pipe_server:AtExit called!\n"); }
+
 	std::map<std::string, SConnectItem*>::iterator it;
 
 	for (it = s_mpConnections.begin(); it != s_mpConnections.end(); it++)
@@ -215,6 +226,8 @@ static void CleanMexFile(void)
 	s_mpConnections.clear();
 
 	ASocketB::Cleanup();
+
+    s_nInited = 0;
 }
 
 

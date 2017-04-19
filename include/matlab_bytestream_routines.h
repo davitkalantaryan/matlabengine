@@ -26,7 +26,7 @@
 #define MAXIMUM_NUMBER_OF_IN_AND_OUTS	50
 #endif
 
-#include <stddef.h>
+//#include <stddef.h>
 #include <mex.h>
 
 #ifndef u_char_ttt_defined
@@ -44,7 +44,7 @@ extern "C"
 {
 #endif
 
-//mxArray*	MatlabArrayToMatlabByteStreamMex(int numOfArgs, mxArray*a_Inputs[]);
+/* This function will be removed. In next version this will be marked as depr. */
 int32_ttt	GetByteStreamLen(mxArray* a_matlabByteStream);
 
 #ifdef __cplusplus

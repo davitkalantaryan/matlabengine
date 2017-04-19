@@ -30,7 +30,9 @@
 #define LINKAGE_SRC
 #endif
 
+#if defined(_MSC_VER) & (_MSC_VER>1400)
 #pragma warning(disable : 4996)
+#endif
 
 
 LINKAGE_SRC ASocketTCP::ASocketTCP()

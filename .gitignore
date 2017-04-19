@@ -5,6 +5,7 @@
 prj/*/*/Makefile*
 prj/daqadcreceiver/daqadcreceiver_qt/daqadcreceiver
 sys/*/bin/*
+sys/*/mbin/*
 sys/*/.objects/*
 prj/*/*/debug/*
 prj/*/*/release/*

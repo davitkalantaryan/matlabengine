@@ -19,40 +19,18 @@
  *
  */
 
-#include <process.h>
-#include <stdio.h>
-#include "matlab_bytestream_routines.h"
 
+
+#include "matlab_bytestream_routines.h"
+#include <stdio.h>
+
+#if defined(_MSC_VER) & (_MSC_VER>1400)
 #pragma warning(disable : 4996)
+#endif
 
 #ifdef __cplusplus
 extern "C"
 {
-#endif
-
-#if 0
-mxArray* MatlabArrayToMatlabByteStreamMex(int a_nNumOfArgs, mxArray*a_Inputs[])
-{
-	mxArray* pcByteArray = NULL;
-	mxArray* pCellArray = mxCreateCellMatrix(1, a_nNumOfArgs);
-	mxArray** ppInputs = const_cast<mxArray**>(a_Inputs);
-
-	if (!pCellArray)
-	{
-		// Make some report
-		return NULL;
-	}
-
-	for (int i(0); i < a_nNumOfArgs; ++i)
-	{
-		mxSetCell(pCellArray, i, ppInputs[i]);
-	}
-
-	mexCallMATLABWithTrap(1, &pcByteArray, 1, &pCellArray, "getByteStreamFromArray");
-	mxDestroyArray(pCellArray);
-
-	return pcByteArray;
-}
 #endif
 
 

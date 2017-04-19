@@ -14,8 +14,11 @@
 #ifndef __matlab_engine_serverbase_hpp__
 #define __matlab_engine_serverbase_hpp__
 
-#ifndef TIMEOUT_TIME_MS
-#define TIMEOUT_TIME_MS				20000
+#ifndef SERVER_BIG_TIMEOUT_MS
+#define SERVER_BIG_TIMEOUT_MS		-1
+#endif
+#ifndef SMALL_TIMEOUT_MS
+#define	SMALL_TIMEOUT_MS		20000
 #endif
 #define	CASH_AND_MAX_QUEUEE_SIZE	16
 

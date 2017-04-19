@@ -61,11 +61,11 @@ void  matlab::engine::ServerBase::StopServer(void)
 	SResourceJob newJob;
 	m_nRun = 0;
 	StopServerPrivate();
-	m_serverThread.join();
 	newJob.code = RESRC_REQ_TYPES::FINISH_LOOP;
 	newJob.arg = NULL;
 	m_jobQueuee.AddElement(newJob);
 	m_semaphoreForResource.post();
+	m_serverThread.join();
 	m_resourceThread.join();
 }
 
@@ -106,6 +106,7 @@ void matlab::engine::ServerBase::DeteleClient(struct SConnectionItem* a_clientIt
 void matlab::engine::ServerBase::DeleteItemInResourceThread(SConnectionItem* a_item)
 {
 	a_item->run = 0;
+	(*m_fpClose)(a_item->senderReceiver);
 	a_item->serverThread.join();
 	if (!a_item->prev && !a_item->next) { m_firstItem = NULL; } // last item
 	else if (!a_item->prev && a_item->next) { a_item->next->prev = NULL; m_firstItem = a_item->next; }
@@ -173,7 +174,7 @@ void matlab::engine::ServerBase::ContactThread(struct SConnectionItem* a_item)
 
 	while (m_nRun && a_item->run)
 	{
-		nReadReturn = (*m_fpReceive)(a_item->senderReceiver,&aInfo, 8, TIMEOUT_TIME_MS);
+		nReadReturn = (*m_fpReceive)(a_item->senderReceiver,&aInfo, 8, SERVER_BIG_TIMEOUT_MS);
 		
 		if (nReadReturn == _SOCKET_TIMEOUT_) { continue; }
 		else if (nReadReturn != 8) { break; }
@@ -187,14 +188,14 @@ void matlab::engine::ServerBase::ContactThread(struct SConnectionItem* a_item)
 			a_item->mutexForBuffers.lock();
 			a_item->serializer.Resize(aInfo.overallMin8, aInfo.numberOfOutsOrError);
 			nReadReturn = (*m_fpReceive)(a_item->senderReceiver, a_item->serializer.GetBufferForReceive(), 
-				aInfo.overallMin8, TIMEOUT_TIME_MS);
+				aInfo.overallMin8, SMALL_TIMEOUT_MS);
 			a_item->mutexForBuffers.unlock();
 			m_pMatHandle->CallOnMatlabThreadC(this,&matlab::engine::ServerBase::CallMatlabFunction, (void*)a_item);
 			break;
 		}
 	} // while (s_nRun)
 
-	(*m_fpClose)(a_item->senderReceiver);
+	//(*m_fpClose)(a_item->senderReceiver);
 }
 
 

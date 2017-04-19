@@ -23,7 +23,11 @@
 #endif
 
 // This should be done after check
+#if __cplusplus >= 199711L
 #define __OVERRIDE__	override
+#else
+#define __OVERRIDE__
+#endif
 
 namespace matlab{ namespace engine{
 

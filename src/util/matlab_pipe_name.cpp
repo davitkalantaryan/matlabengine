@@ -7,11 +7,12 @@
  *
  */
 
-#include <process.h>
 #include <stdio.h>
 #include "matlab_pipe_name.h"
 
+#if defined(_MSC_VER) & (_MSC_VER>1400)
 #pragma warning(disable : 4996)
+#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -26,7 +27,7 @@ const char* GenerateMatlabPipeName(int a_nPid)
 
 	if (snInited == 0)
 	{
-		_snprintf(svcBuffer, 255, "\\\\.\\pipe\\matlab_pipe_%d", a_nPid);
+        snprintf(svcBuffer, 255, "\\\\.\\pipe\\matlab_pipe_%d", a_nPid);
 	}
 
 	
@@ -41,7 +42,7 @@ const char* GenerateMatlabPipeNameV(int a_nPid,int a_nVersion)
 
 	if (snInited == 0)
 	{
-		_snprintf(svcBuffer, 255, "\\\\.\\pipe\\matlab_pipe_%d_%d", a_nPid, a_nVersion);
+        snprintf(svcBuffer, 255, "\\\\.\\pipe\\matlab_pipe_%d_%d", a_nPid, a_nVersion);
 	}
 
 

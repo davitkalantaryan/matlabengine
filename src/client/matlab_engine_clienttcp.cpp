@@ -11,6 +11,10 @@
 #include "matlab_engine_clienttcp.hpp"
 #include "matlab_pipe_name.h"
 
+#ifndef SMALL_TIMEOUT_MS
+#define	SMALL_TIMEOUT_MS		20000
+#endif
+
 
 int matlab::engine::ClientTcp::ConnectToServer(const char* a_serverName, int a_nPid)
 {
@@ -32,5 +36,6 @@ int matlab::engine::ClientTcp::ConnectToServer(const char* a_serverName, int a_n
 
 int matlab::engine::ClientTcp::RecvData(void* a_buffer, int a_nBufSize, long a_lnTimeoutMS)
 {
-	return ASocketTCP::RecvData(a_buffer, a_nBufSize, a_lnTimeoutMS, a_lnTimeoutMS);
+	long lnClientSmallTiomeout = a_lnTimeoutMS < 0 ? SMALL_TIMEOUT_MS : a_lnTimeoutMS;
+	return ASocketTCP::RecvData(a_buffer, a_nBufSize, a_lnTimeoutMS, lnClientSmallTiomeout);
 }

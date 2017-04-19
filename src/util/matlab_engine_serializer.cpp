@@ -127,6 +127,8 @@ int matlab::engine::Serializer::SetSendParams(const char* a_scriptName,
 	if (nReturn) { return nReturn; }
 
 	memcpy(this->MatlabScriptNamePrivate(), a_scriptName, nStrLenPlus1);
-	if (a_pInOrOut) { memcpy(this->InputsOrOutputs(), a_pInOrOut, a_nInOrOutpLen); }
+	if (a_nInOrOutpLen && a_pInOrOut) { 
+		memcpy(this->InputsOrOutputs(), a_pInOrOut, a_nInOrOutpLen);
+	}
 	return 0;
 }
