@@ -13,6 +13,7 @@
 #include <mex.h>
 #include <stdarg.h>
 #include <common_fifofast.hpp>
+#include "matlab_engine_serializer.hpp"
 
 #ifndef __THISCALL__
 #ifdef _MSC_VER
@@ -46,8 +47,12 @@ public:
 	virtual void Start() = 0;
 	virtual void Stop() = 0;
 
-	mxArray* MatlabArrayToMatlabByteStream(int a_nNumOfArgs, mxArray*a_Inputs[]);
-	int HandleIncomData(mxArray** a_pInc, int a_nMxArraySize, const void* a_data,int a_nBytesNumber);
+#if 1
+	void* MatlabArrayToByteStream1(int32_ttt type, int numOfArgs, mxArray** inputs, int32_ttt* length);
+	void* MatlabArrayToByteStream2(int32_ttt type, int numOfArgs, const mxArray* inputs[], int32_ttt* length);
+	int ByteStreamToMatlabArray(int32_ttt type,int maxOutSize,mxArray** output, 
+		int byteStreamLen,const void* byteStream);
+#endif
 	
 	int newFrprint(int out, const char* fmt, ...);
 
@@ -65,10 +70,14 @@ public:
 	template <typename TypeCls>
 	void CallOnMatlabThreadC(TypeCls* a_owner, void (TypeCls::*a_fpClbK)(void*arg), void*a_arg) { 
 		CallOnMatlabThread((void*)a_owner, (TypeClbK)GetFuncPointer(1, a_fpClbK),a_arg); }
+	void PrintFromAnyThread(const char* string);
 
 protected:
 	void AddMatlabJob(void* owner, TypeClbK fpClb, void* arg);
 	void HandleAllJobs(void);
+
+private:
+	void PrintOnMatlabThreadPrivate(void* string);
 
 private:
 	common::FifoFast<SLsnCallbackItem, 8>	m_fifoJobs;

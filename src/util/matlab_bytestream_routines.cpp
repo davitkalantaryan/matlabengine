@@ -33,7 +33,7 @@ extern "C"
 {
 #endif
 
-
+#if 0
 int32_ttt GetByteStreamLen(mxArray* a_matlabByteStream)
 {
 	if (a_matlabByteStream)
@@ -54,6 +54,7 @@ int32_ttt GetByteStreamLen(mxArray* a_matlabByteStream)
 
 	return 0;
 }
+#endif
 
 #ifdef __cplusplus
 }

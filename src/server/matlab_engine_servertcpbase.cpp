@@ -41,16 +41,25 @@ int matlab::engine::ServerTcpBase::AddClient(class ASocketTCP& a_ClientSocket, s
 
 int matlab::engine::ServerTcpBase::StartServerPrivate(void)
 {
+	char vcBuffer[64];
 	int nTry,nRet(-1);
 	
 	ASocketB::Initialize();
+	gethostname(vcBuffer, 63);
 
 	// If everything is ok, then AServerTCP::StartServer will not return
+	
+	snprintf(vcBuffer, 63, "%s:%d\\n",vcBuffer,0);
+	m_pMatHandle->PrintFromAnyThread(vcBuffer);
 	for (nTry = 0;
 		ServerBase::m_nRun && (nTry < MAX_TRY_NUMBERS) &&
 		(nRet = AServerTCP::StartServer(GenerateMatlabServerPortNumber(0, nTry), 1000));
 		++nTry);
 
+	if (ServerBase::m_nRun){
+		snprintf(vcBuffer, 63, "%s:%d\\n", vcBuffer, (int)getpid());
+		m_pMatHandle->PrintFromAnyThread(vcBuffer);
+	}
 	for (nTry = 0;
 		ServerBase::m_nRun && (nTry < MAX_TRY_NUMBERS) &&
 		(nRet = AServerTCP::StartServer(GenerateMatlabServerPortNumber(getpid(), nTry), 1000));

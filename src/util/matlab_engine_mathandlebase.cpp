@@ -34,68 +34,118 @@ int matlab::engine::MatHandleBase::newFrprint(int a_out, const char* a_fmt, ...)
 	va_end(argList);
 
 	a_out = a_out < 1 ? 1 : (a_out > 2 ? 2 : a_out);
-	snprintf(vcBufferFin, 4095, "fprintf(%d,'%s');", a_out, vcBufferIn);
+	snprintf(vcBufferFin, 4095, "fprintf(%d,'%s');drawnow;", a_out, vcBufferIn);
 	this->newEvalStringWithTrap(vcBufferFin);
 
 	return nReturn;
 }
 
 
-mxArray* matlab::engine::MatHandleBase::MatlabArrayToMatlabByteStream(int a_nNumOfArgs, mxArray*a_Inputs[])
+void* matlab::engine::MatHandleBase::MatlabArrayToByteStream1(
+	int32_ttt a_type, int a_nNumOfArgs, mxArray** a_vInputs, int32_ttt* a_pnLength)
 {
-	mxArray* pcByteArray = NULL;
-	mxArray* pCellArray = mxCreateCellMatrix(1, a_nNumOfArgs);
-	mxArray** ppInputs = const_cast<mxArray**>(a_Inputs);
+	*a_pnLength = 0;
 
-	if (!pCellArray)
+	switch (a_type)
 	{
-		// Make some report
+	case TYPE::MAT_UNDOCU:
+	{
+		mxArray* pcByteArray = NULL;
+		mxArray* pCellArray = mxCreateCellMatrix(1, a_nNumOfArgs);
+
+		if (!pCellArray) {/*error handling?*/return NULL; }
+
+		for (int i(0); i < a_nNumOfArgs; ++i)
+		{
+			mxSetCell(pCellArray, i, a_vInputs[i]);
+		}
+
+		this->newCallMATLABWithTrap(1, &pcByteArray, 1, &pCellArray, "getByteStreamFromArray");
+		mxDestroyArray(pCellArray);
+
+		if (!pcByteArray) { return NULL; }
+
+		*a_pnLength = (int32_ttt)(mxGetNumberOfElements(pcByteArray)*mxGetElementSize(pcByteArray));
+		return mxGetData(pcByteArray);
+	}
+	break; // case TYPE::MAT_UNDOCU:
+	
+	case TYPE::RAW1:
+	{
+	}
+	break; // case TYPE::RAW1:
+	
+	default:
 		return NULL;
-	}
+	} // switch (a_type)
 
-	for (int i(0); i < a_nNumOfArgs; ++i)
-	{
-		mxSetCell(pCellArray, i, ppInputs[i]);
-	}
+	return NULL;
+}
 
-	this->newCallMATLABWithTrap(1, &pcByteArray, 1, &pCellArray, "getByteStreamFromArray");
-	mxDestroyArray(pCellArray);
-
-	return pcByteArray;
+void* matlab::engine::MatHandleBase::MatlabArrayToByteStream2(
+	int32_ttt a_type, int a_nNumOfArgs, const mxArray* a_vInputs[], int32_ttt* a_pnLength)
+{
+	mxArray** ppInputs = const_cast<mxArray**>(a_vInputs);
+	return MatlabArrayToByteStream1(a_type,a_nNumOfArgs, ppInputs,a_pnLength);
 }
 
 
-int matlab::engine::MatHandleBase::HandleIncomData(mxArray** a_pInc, 
-	int a_nMxArraySize, const void* a_data,int a_nBytesNumber)
+int  matlab::engine::MatHandleBase::ByteStreamToMatlabArray(
+	int32_ttt a_type, 
+	int a_nMaxOutSize, mxArray** a_outputs,
+	int a_nByteStreamLen, const void* a_byteStream)
 {
 	int nReturn(-1);
-	void* pSerializedData;
-	mxArray* pExceptionReturned;
-	mxArray* pCellArrayFromByteStream;
-	mxArray* pSerializedInputCell = mxCreateNumericMatrix(1, a_nBytesNumber, mxUINT8_CLASS, mxREAL);
 
-	//mexMakeArrayPersistent(pSerializedInputCell);
-	
-	if (!pSerializedInputCell) {/*report*/goto returnPoint; }
-	pSerializedData = mxGetData(pSerializedInputCell);
-	memcpy(pSerializedData, a_data, a_nBytesNumber);
-
-	pExceptionReturned = this->newCallMATLABWithTrap(1, &pCellArrayFromByteStream, 1,
-		&pSerializedInputCell, "getArrayFromByteStream");
-	mxDestroyArray(pSerializedInputCell);
-	if (pExceptionReturned) { pCellArrayFromByteStream = pExceptionReturned;goto returnPoint; }
-	if (!pCellArrayFromByteStream) {/*report*/goto returnPoint; }
-
-	nReturn = (int)mxGetN(pCellArrayFromByteStream);
-	nReturn = nReturn > a_nMxArraySize ? a_nMxArraySize : nReturn;
-
-	for (int i(0); i < nReturn; ++i)
+	switch (a_type)
 	{
-		a_pInc[i] = mxGetCell(pCellArrayFromByteStream, i);
-	}
+	case TYPE::MAT_UNDOCU:
+	{
+		void* pSerializedData;
+		mxArray* pExceptionReturned;
+		mxArray* pCellArrayFromByteStream;
+		mxArray* pSerializedInputCell = mxCreateNumericMatrix(1, a_nByteStreamLen,mxUINT8_CLASS,mxREAL);
 
-returnPoint:
-	return nReturn;
+		if (!pSerializedInputCell) {/*report*/return -1; }
+		pSerializedData = mxGetData(pSerializedInputCell);
+		memcpy(pSerializedData, a_byteStream, a_nByteStreamLen);
+
+		pExceptionReturned = this->newCallMATLABWithTrap(1, &pCellArrayFromByteStream, 1,
+			&pSerializedInputCell, "getArrayFromByteStream");
+		mxDestroyArray(pSerializedInputCell);
+		if (pExceptionReturned) { pCellArrayFromByteStream = pExceptionReturned; return -2; }
+		if (!pCellArrayFromByteStream) {/*report*/return -3; }
+
+		nReturn = (int)mxGetN(pCellArrayFromByteStream);
+		nReturn = nReturn > a_nMaxOutSize ? a_nMaxOutSize : nReturn;
+
+		for (int i(0); i < nReturn; ++i)
+		{
+			a_outputs[i] = mxDuplicateArray( mxGetCell(pCellArrayFromByteStream, i));
+		}
+
+		return nReturn;
+	}
+	break; // case TYPE::MAT_UNDOCU:
+	default:
+		break;
+	} // switch (a_type)
+
+	return nReturn;	
+}
+
+
+void matlab::engine::MatHandleBase::PrintFromAnyThread(const char* a_cpcString)
+{
+	void* pString = (void*)a_cpcString;
+	this->CallOnMatlabThreadC(this, &MatHandleBase::PrintOnMatlabThreadPrivate, pString);
+}
+
+
+void matlab::engine::MatHandleBase::PrintOnMatlabThreadPrivate(void* a_string)
+{
+	const char* cpcString = (const char*)a_string;
+	this->newFrprint(STDPIPES::STDOUT, cpcString);
 }
 
 
@@ -119,6 +169,19 @@ void matlab::engine::MatHandleBase::HandleAllJobs(void)
 	}
 
 }
+
+
+/*/////////////////////*/
+#if 0
+static void* ToByteStream(int32_ttt a_type, int a_nNumOfArgs, 
+	const mxArray* a_vInputs[], int32_ttt* a_pnLength)
+{
+	for (int i(0); i < a_nNumOfArgs; ++i)
+	{
+		//
+	}
+}
+#endif
 
 
 namespace matlab{ namespace engine{

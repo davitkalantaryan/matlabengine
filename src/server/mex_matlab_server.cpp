@@ -32,7 +32,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	static int snAtExitRegistered = 0;
 	int nError(0);
 
-	mexPrintf("Version=18\n");
+	mexPrintf("Version=19\n");
 
 	if (a_nNumInps   && mxIsChar(a_Inputs[0]))
 	{

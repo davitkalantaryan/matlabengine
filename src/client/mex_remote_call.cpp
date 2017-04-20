@@ -43,11 +43,12 @@ static std::map<std::string,SConnectItem*>	s_mpConnections;
 void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	int a_nNumInps, const mxArray*a_Inputs[])
 {
-	mxArray* pcByteArray(NULL);
-	mxArray** ppInputs = const_cast<mxArray**>(a_Inputs);
+	void* pByteStream;
     matlab::engine::SDataHeader aInfo;
     int i,nReceived,nAdrStrLenPlus15;
     int32_ttt nBSL;
+	//int32_ttt nSeriType = matlab::engine::TYPE::RAW1;
+	int32_ttt nSeriType = matlab::engine::TYPE::MAT_UNDOCU;
 	//long lnTimeout;
 
 	if (!s_nInited) {
@@ -147,22 +148,19 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	}
 
 	// Converst to MATLAB Byte stream remaining arguments
-	pcByteArray = s_matHandle.MatlabArrayToMatlabByteStream(a_nNumInps-2, ppInputs+2);
-	if (!pcByteArray)
+	pByteStream = s_matHandle.MatlabArrayToByteStream2(nSeriType,a_nNumInps-2, a_Inputs+2,&nBSL);
+	if (!pByteStream)
 	{
 		mexErrMsgTxt("Unable to create buffer for the cell!\n");
 		return;
 	}
-
-    nBSL = GetByteStreamLen(pcByteArray);
 	if (s_nDebug) { mexPrintf("BSL=%d\n", (int)nBSL); }
 
-	s_serializeDes.SetSendParams2(pcScriptName,
-		(const u_char_ttt*)mxGetData(pcByteArray), GetByteStreamLen(pcByteArray),a_nNumOuts);
+	s_serializeDes.SetSendParams3(nSeriType,pcScriptName, nBSL,pByteStream,a_nNumOuts);
 
 	s_pCurrentConnect->isHandled = false;
-	s_pCurrentConnect->socketTcp.SendData(s_serializeDes.GetOverAllBufferForSend2(), 
-		s_serializeDes.OverAllMinusHeader() + MATLAB_HEADER_LENGTH);
+	s_pCurrentConnect->socketTcp.SendData(
+		s_serializeDes.GetBufferForSend3(),s_serializeDes.SendBufLength3());
 	s_pCurrentConnect->isJobActive = true;
 
 	if (s_pCurrentConnect->timeoutMS == NO_RECEIVE) 
@@ -187,19 +185,19 @@ recieveResult:
 		mexErrMsgTxt("Error durring calling script in the remote host");
 		return;
 	}
-	else if (aInfo.overallMinHeader > 0) {
-		s_serializeDes.Resize2(aInfo.overallMinHeader, aInfo.byteStrLength,aInfo.numberOfOutsOrError);
-		s_pCurrentConnect->socketTcp.RecvData(s_serializeDes.GetBufferForReceive2(), 
-			aInfo.overallMinHeader, 20000);
+	else if (aInfo.allMinusHeader > 0) {
+		s_serializeDes.Resize3(nSeriType,aInfo.allMinusHeader, aInfo.byteStrLength,aInfo.numberOfOuts);
+		s_pCurrentConnect->socketTcp.RecvData(s_serializeDes.GetBufferForReceive3(), 
+			aInfo.allMinusHeader, 20000);
 		a_nNumOuts = a_nNumOuts < 1 ? 1 : a_nNumOuts;
 		s_pCurrentConnect->isJobActive = false;
-		if (aInfo.numberOfOutsOrError < 0)
+		if ( (aInfo.numberOfOuts < 0) || (aInfo.allMinusHeader<=0))
 		{
 			mexErrMsgTxt("Error durring calling script in the remote host");
 			return;
 		}
-		s_matHandle.HandleIncomData(a_Outputs, a_nNumOuts,
-			s_serializeDes.CellByteStream(), s_serializeDes.CellByteStreamLength());
+		s_matHandle.ByteStreamToMatlabArray(nSeriType, a_nNumOuts,a_Outputs,
+			aInfo.byteStrLength,s_serializeDes.VaribleByteStream3());
 	} // else if (aInfo.overallMin8 > 0)
 
 	return;

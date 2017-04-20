@@ -45,7 +45,7 @@ extern "C"
 #endif
 
 /* This function will be removed. In next version this will be marked as depr. */
-int32_ttt	GetByteStreamLen(mxArray* a_matlabByteStream);
+//int32_ttt	GetByteStreamLen(mxArray* a_matlabByteStream);
 
 #ifdef __cplusplus
 }
