@@ -65,13 +65,16 @@ mxArray* matlab::engine::MatHandleBase::MatlabArrayToMatlabByteStream(int a_nNum
 }
 
 
-int matlab::engine::MatHandleBase::HandleIncomData(mxArray** a_pInc, int a_nMxArraySize, const void* a_data,int a_nBytesNumber)
+int matlab::engine::MatHandleBase::HandleIncomData(mxArray** a_pInc, 
+	int a_nMxArraySize, const void* a_data,int a_nBytesNumber)
 {
 	int nReturn(-1);
 	void* pSerializedData;
 	mxArray* pExceptionReturned;
 	mxArray* pCellArrayFromByteStream;
 	mxArray* pSerializedInputCell = mxCreateNumericMatrix(1, a_nBytesNumber, mxUINT8_CLASS, mxREAL);
+
+	//mexMakeArrayPersistent(pSerializedInputCell);
 	
 	if (!pSerializedInputCell) {/*report*/goto returnPoint; }
 	pSerializedData = mxGetData(pSerializedInputCell);

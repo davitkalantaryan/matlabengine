@@ -157,12 +157,12 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
     nBSL = GetByteStreamLen(pcByteArray);
 	if (s_nDebug) { mexPrintf("BSL=%d\n", (int)nBSL); }
 
-	s_serializeDes.SetSendParams(pcScriptName,
+	s_serializeDes.SetSendParams2(pcScriptName,
 		(const u_char_ttt*)mxGetData(pcByteArray), GetByteStreamLen(pcByteArray),a_nNumOuts);
 
 	s_pCurrentConnect->isHandled = false;
-	s_pCurrentConnect->socketTcp.SendData(s_serializeDes.GetOverAllBufferForSend(), 
-		s_serializeDes.OverAllMinus8Byte() + 8);
+	s_pCurrentConnect->socketTcp.SendData(s_serializeDes.GetOverAllBufferForSend2(), 
+		s_serializeDes.OverAllMinusHeader() + MATLAB_HEADER_LENGTH);
 	s_pCurrentConnect->isJobActive = true;
 
 	if (s_pCurrentConnect->timeoutMS == NO_RECEIVE) 
@@ -172,12 +172,13 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	
 	// receive answer
 recieveResult:
-	nReceived= s_pCurrentConnect->socketTcp.RecvData(&aInfo, 8, s_pCurrentConnect->timeoutMS);
+	nReceived= s_pCurrentConnect->socketTcp.RecvData(&aInfo, MATLAB_HEADER_LENGTH, 
+		s_pCurrentConnect->timeoutMS);
 	if (nReceived == _SOCKET_TIMEOUT_)
 	{
 		goto returnWithTimeout;
 	}
-	else if (nReceived != 8)
+	else if (nReceived != MATLAB_HEADER_LENGTH)
 	{
 		s_mpConnections.erase(s_pCurrentConnect->serverName);
 		s_pCurrentConnect->socketTcp.Close();
@@ -186,18 +187,19 @@ recieveResult:
 		mexErrMsgTxt("Error durring calling script in the remote host");
 		return;
 	}
-	else if (aInfo.overallMin8 > 0) {
-		s_serializeDes.Resize(aInfo.overallMin8, aInfo.numberOfOutsOrError);
-		s_pCurrentConnect->socketTcp.RecvData(s_serializeDes.GetBufferForReceive(), aInfo.overallMin8, 10000);
+	else if (aInfo.overallMinHeader > 0) {
+		s_serializeDes.Resize2(aInfo.overallMinHeader, aInfo.byteStrLength,aInfo.numberOfOutsOrError);
+		s_pCurrentConnect->socketTcp.RecvData(s_serializeDes.GetBufferForReceive2(), 
+			aInfo.overallMinHeader, 20000);
 		a_nNumOuts = a_nNumOuts < 1 ? 1 : a_nNumOuts;
-		s_matHandle.HandleIncomData(a_Outputs, a_nNumOuts,
-			s_serializeDes.InputsOrOutputs(), s_serializeDes.InOutBytesNumber());
 		s_pCurrentConnect->isJobActive = false;
 		if (aInfo.numberOfOutsOrError < 0)
 		{
 			mexErrMsgTxt("Error durring calling script in the remote host");
 			return;
 		}
+		s_matHandle.HandleIncomData(a_Outputs, a_nNumOuts,
+			s_serializeDes.CellByteStream(), s_serializeDes.CellByteStreamLength());
 	} // else if (aInfo.overallMin8 > 0)
 
 	return;

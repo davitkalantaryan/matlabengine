@@ -174,21 +174,23 @@ void matlab::engine::ServerBase::ContactThread(struct SConnectionItem* a_item)
 
 	while (m_nRun && a_item->run)
 	{
-		nReadReturn = (*m_fpReceive)(a_item->senderReceiver,&aInfo, 8, SERVER_BIG_TIMEOUT_MS);
+		nReadReturn = (*m_fpReceive)(a_item->senderReceiver,&aInfo, 
+			MATLAB_HEADER_LENGTH, SERVER_BIG_TIMEOUT_MS);
 		
 		if (nReadReturn == _SOCKET_TIMEOUT_) { continue; }
-		else if (nReadReturn != 8) { break; }
+		else if (nReadReturn != MATLAB_HEADER_LENGTH) { break; }
 
-		switch (aInfo.overallMin8)
+		switch (aInfo.overallMinHeader)
 		{
 		case CLIENT_REQ_TYPES::CLOSE:
 			a_item->run = 0;
 			break;
 		default:  // default is calling matlab routine
 			a_item->mutexForBuffers.lock();
-			a_item->serializer.Resize(aInfo.overallMin8, aInfo.numberOfOutsOrError);
-			nReadReturn = (*m_fpReceive)(a_item->senderReceiver, a_item->serializer.GetBufferForReceive(), 
-				aInfo.overallMin8, SMALL_TIMEOUT_MS);
+			a_item->serializer.Resize2(aInfo.overallMinHeader, aInfo.byteStrLength,
+				aInfo.numberOfOutsOrError);
+			nReadReturn = (*m_fpReceive)(a_item->senderReceiver, 
+				a_item->serializer.GetBufferForReceive2(), aInfo.overallMinHeader, SMALL_TIMEOUT_MS);
 			a_item->mutexForBuffers.unlock();
 			m_pMatHandle->CallOnMatlabThreadC(this,&matlab::engine::ServerBase::CallMatlabFunction, (void*)a_item);
 			break;
@@ -229,18 +231,18 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 
 	pItem->mutexForBuffers.lock();
 
-	if (pItem->serializer.InOutBytesNumber() <= 0) { goto returnPoint; }
+	if (pItem->serializer.OverAllMinusHeader() <= 0) { goto returnPoint; }
 	try {
-		nBSL = pItem->serializer.InOutBytesNumber();
+		nBSL = pItem->serializer.CellByteStreamLength();
 
 		nInputs = m_pMatHandle->HandleIncomData(
 			vInputs, MAXIMUM_NUMBER_OF_IN_AND_OUTS,
-			pItem->serializer.InputsOrOutputs(), nBSL);
+			pItem->serializer.CellByteStream(), nBSL);
 
 		if (nInputs < 0) { goto returnPoint; }
 
-		nOutputs = pItem->serializer.NumOfExpOutsOrError() > MAXIMUM_NUMBER_OF_IN_AND_OUTS ?
-			MAXIMUM_NUMBER_OF_IN_AND_OUTS : pItem->serializer.NumOfExpOutsOrError();
+		nOutputs = pItem->serializer.NumOfExpOutsOrError2() > MAXIMUM_NUMBER_OF_IN_AND_OUTS ?
+			MAXIMUM_NUMBER_OF_IN_AND_OUTS : pItem->serializer.NumOfExpOutsOrError2();
 
 		if (((nInputs == 0) && (nOutputs<2)) || (nOutputs == 0)) // try any remaining outs
 		{
@@ -254,12 +256,13 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 
 		if ((nInputs == 0) && (nOutputs<2)) // eval string is called
 		{
-			pReturnFromCallMatlab = m_pMatHandle->newEvalStringWithTrap(pItem->serializer.MatlabScriptName());
+			pReturnFromCallMatlab = m_pMatHandle->newEvalStringWithTrap(
+				pItem->serializer.MatlabScriptName2());
 		}
 		else
 		{
 			pReturnFromCallMatlab = m_pMatHandle->newCallMATLABWithTrap(nOutputs, vOutputs, 
-				nInputs, vInputs, pItem->serializer.MatlabScriptName());
+				nInputs, vInputs, pItem->serializer.MatlabScriptName2());
 		}
 
 		if (((nInputs == 0) && (nOutputs<2)) || (nOutputs == 0)) // try any remaining outs
@@ -297,10 +300,11 @@ returnPoint:
 	{
 		m_pMatHandle->newFrprint(STDPIPES::STDERR,
 			"Error during calling script by request from remote.\\n"
-			"script name is \"%s\"\\n", pItem->serializer.MatlabScriptName());
+			"script name is \"%s\"\\n", pItem->serializer.MatlabScriptName2());
 	}
-	pItem->serializer.SetSendParams(cpcInfoOrError, pRetBuffer, retBufLen, nReturn);
-	m_fpSend(pItem->senderReceiver, pItem->serializer.GetOverAllBufferForSend(), pItem->serializer.OverAllMinus8Byte() + 8);
+	pItem->serializer.SetSendParams2(cpcInfoOrError, pRetBuffer, retBufLen, nReturn);
+	m_fpSend(pItem->senderReceiver, pItem->serializer.GetOverAllBufferForSend2(), 
+		pItem->serializer.OverAllMinusHeader() + MATLAB_HEADER_LENGTH);
 	pItem->mutexForBuffers.unlock();
 	m_pMatHandle->newEvalStringWithTrap("drawnow");
 #ifdef WIN32

@@ -28,16 +28,25 @@
 matlab::engine::Serializer::Serializer()
 	:
 	m_nBufferMaxSize(0),
-	m_pWholeBuffer((u_char_ttt*)malloc(8)),
-	m_pnOverAllMinus8Byte((int32_ttt*)m_pWholeBuffer),
-	m_pnNumOfExpOutsOrError((int32_ttt*)(m_pWholeBuffer+4))
+	m_nReserved(0)
 {
-	m_pWholeBuffer = (u_char_ttt*)malloc(8);
+	m_pWholeBuffer = (u_char_ttt*)malloc(MATLAB_HEADER_LENGTH);
 	if (!m_pWholeBuffer)
 	{
 		throw "Low memory";
 	}
-	m_nBufferMaxSize = 8;
+	m_nBufferMaxSize = MATLAB_HEADER_LENGTH;
+	
+	m_pnTypeOfSerialization = ((int32_ttt*)((void*)(m_pWholeBuffer+0)));
+	m_pnOverAllMinusHeader2 = ((int32_ttt*)((void*)(m_pWholeBuffer + 4)));
+	m_pnNumOfExpOutsOrError2 = ((int32_ttt*)((void*)(m_pWholeBuffer + 8)));
+	m_pnMatlabByteStreamLength = ((int32_ttt*)((void*)(m_pWholeBuffer + 12)));
+
+	*m_pnTypeOfSerialization = TYPES::MAT_UNDOCU;
+	*m_pnOverAllMinusHeader2 = 0;
+	*m_pnMatlabByteStreamLength = 0;
+	*m_pnNumOfExpOutsOrError2 = 0;
+	
 }
 
 
@@ -47,9 +56,12 @@ matlab::engine::Serializer::~Serializer()
 }
 
 
-int matlab::engine::Serializer::Resize(int32_ttt a_nNewOverAllMinus8Byte, int32_ttt a_nNumOfOutsOrErrCode)
+int matlab::engine::Serializer::Resize2(
+	int32_ttt a_nNewOverAllMinusHeader,
+	int32_ttt a_nNewByteStreamLength,
+	int32_ttt a_nNumOfOutsOrErrCode)
 {
-	int nNewBufferSize = a_nNewOverAllMinus8Byte + 8;
+	int nNewBufferSize = a_nNewOverAllMinusHeader + MATLAB_HEADER_LENGTH;
 	if (nNewBufferSize > m_nBufferMaxSize)
 	{
 		u_char_ttt* pTempBuffer = (u_char_ttt*)realloc(m_pWholeBuffer, nNewBufferSize);
@@ -60,75 +72,79 @@ int matlab::engine::Serializer::Resize(int32_ttt a_nNewOverAllMinus8Byte, int32_
 		}
 		m_pWholeBuffer = pTempBuffer;
 		m_nBufferMaxSize = nNewBufferSize;
-		m_pnOverAllMinus8Byte = (int32_ttt*)m_pWholeBuffer;
-		m_pnNumOfExpOutsOrError = (int32_ttt*)(m_pWholeBuffer + 4);
+		
+		m_pnTypeOfSerialization = ((int32_ttt*)((void*)(m_pWholeBuffer + 0)));
+		m_pnOverAllMinusHeader2 = ((int32_ttt*)((void*)(m_pWholeBuffer + 4)));
+		m_pnNumOfExpOutsOrError2 = ((int32_ttt*)((void*)(m_pWholeBuffer + 8)));
+		m_pnMatlabByteStreamLength = ((int32_ttt*)((void*)(m_pWholeBuffer + 12)));
 	}
 
-	*m_pnOverAllMinus8Byte = a_nNewOverAllMinus8Byte;
-	*m_pnNumOfExpOutsOrError = a_nNumOfOutsOrErrCode;
+	//*m_pnTypeOfSerialization = TYPES::MAT_UNDOCU;
+	*m_pnOverAllMinusHeader2 = a_nNewOverAllMinusHeader;
+	*m_pnMatlabByteStreamLength = a_nNewByteStreamLength;
+	*m_pnNumOfExpOutsOrError2 = a_nNumOfOutsOrErrCode;
 	return 0;
 }
 
-u_char_ttt* matlab::engine::Serializer::GetBufferForReceive()
+u_char_ttt* matlab::engine::Serializer::GetBufferForReceive2()
 {
-	return m_pWholeBuffer+8;
+	return m_pWholeBuffer+ MATLAB_HEADER_LENGTH;
 }
 
 
-u_char_ttt* matlab::engine::Serializer::GetOverAllBufferForSend()
+const u_char_ttt* matlab::engine::Serializer::GetOverAllBufferForSend2()const
 {
 	return m_pWholeBuffer;
 }
 
 
-const char* matlab::engine::Serializer::MatlabScriptName()const
+const char* matlab::engine::Serializer::MatlabScriptName2()const
 {
-	return (const char*)this->MatlabScriptNamePrivate();
+	return (const char*)this->MatlabScriptNamePrivate2();
 }
 
 
-char* matlab::engine::Serializer::MatlabScriptNamePrivate()const
+char* matlab::engine::Serializer::MatlabScriptNamePrivate2()const
 {
-	return (char*)(m_pWholeBuffer + 8);
+	return (char*)(m_pWholeBuffer + MATLAB_HEADER_LENGTH + (*m_pnMatlabByteStreamLength));
 }
 
 
-u_char_ttt* matlab::engine::Serializer::InputsOrOutputs()
+u_char_ttt* matlab::engine::Serializer::CellByteStream()
 {
-	int32_ttt nMatlabScrNameLen = (int32_ttt)strlen(MatlabScriptName());
-	return m_pWholeBuffer + 9 + nMatlabScrNameLen;
+	return m_pWholeBuffer + MATLAB_HEADER_LENGTH;
 }
 
 
-int32_ttt matlab::engine::Serializer::InOutBytesNumber()const
+int32_ttt matlab::engine::Serializer::CellByteStreamLength()const
 {
-	return (*m_pnOverAllMinus8Byte) - 1 - (int32_ttt)strlen(MatlabScriptName());
+	return (*m_pnMatlabByteStreamLength);
 }
 
-int32_ttt matlab::engine::Serializer::OverAllMinus8Byte()const
+int32_ttt matlab::engine::Serializer::OverAllMinusHeader()const
 {
-	return *m_pnOverAllMinus8Byte;
+	return (*m_pnOverAllMinusHeader2);
 }
 
-int32_ttt matlab::engine::Serializer::NumOfExpOutsOrError()const
+int32_ttt matlab::engine::Serializer::NumOfExpOutsOrError2()const
 {
-	return *m_pnNumOfExpOutsOrError;
+	return (*m_pnNumOfExpOutsOrError2);
 }
 
 
-int matlab::engine::Serializer::SetSendParams(const char* a_scriptName,
+int matlab::engine::Serializer::SetSendParams2(const char* a_scriptName,
 	const u_char_ttt* a_pInOrOut, int a_nInOrOutpLen, int32_ttt a_nOutsOrErr)
 {
 	int32_ttt nStrLenPlus1 = (int32_ttt)strlen(a_scriptName) + 1;
-	int32_ttt nOverAllMinus8 = nStrLenPlus1 + a_nInOrOutpLen;
+	int32_ttt nOverAllMinusHeader = nStrLenPlus1 + a_nInOrOutpLen;
 
-	int nReturn = this->Resize(nOverAllMinus8, a_nOutsOrErr);
+	int nReturn = this->Resize2(nOverAllMinusHeader, a_nInOrOutpLen, a_nOutsOrErr);
 
 	if (nReturn) { return nReturn; }
 
-	memcpy(this->MatlabScriptNamePrivate(), a_scriptName, nStrLenPlus1);
+	memcpy(this->MatlabScriptNamePrivate2(), a_scriptName, nStrLenPlus1);
 	if (a_nInOrOutpLen && a_pInOrOut) { 
-		memcpy(this->InputsOrOutputs(), a_pInOrOut, a_nInOrOutpLen);
+		memcpy(this->CellByteStream(), a_pInOrOut, a_nInOrOutpLen);
 	}
 	return 0;
 }

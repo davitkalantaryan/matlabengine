@@ -12,7 +12,7 @@ right2=left2+0.5*(a_right-a_left);
 left3=right2;
 right3=a_right;
 
-%remote_call('znnomos41','--timeout',-10); % -10 means no-wait
+%remote_call('znnomos41','--timeout','no-wait'); % -10 means no-wait
 remote_call('znanser0','--timeout',-10); % -10 means no-wait
 
 tic
