@@ -22,12 +22,12 @@
 #endif
 #define	CASH_AND_MAX_QUEUEE_SIZE	16
 
-#include "matlab_engine_serializer.hpp"
-#include <thread>
-#include <mutex>
-#include "matlab_engine_mathandlebase.hpp"
 #include <memory.h>
 #include <common_unnamedsemaphorelite.hpp>
+#include "matlab_engine_mathandlebase.hpp"
+#include "matlab_engine_serializer.hpp"
+#include <thread_cpp11.hpp>
+#include <mutex_cpp11.hpp>
 #include <common_fifofast.hpp>
 #include "matlab_pipe_name.h"
 
@@ -55,6 +55,8 @@ public: // These functions should be called in MATLAB run thread
 
 	int GetRun();
 
+    void DeteleCurrentClient();
+
 protected:
 	void AddClient(void* client);
 	void DeteleClient(struct SConnectionItem* client);
@@ -76,8 +78,8 @@ private:
 protected:
 	typedef struct SResourceJob { int code; void* arg; }SResourceJob;
 protected:
-	std::thread							m_resourceThread;
-	std::thread							m_serverThread;
+    STD::thread							m_resourceThread;
+    STD::thread							m_serverThread;
 	volatile int						m_nRun;
 	TypeRecvFunc						m_fpReceive;
 	TypeSenderFunc						m_fpSend;
@@ -86,7 +88,7 @@ protected:
 	struct SConnectionItem*				m_firstItem;
 	common::UnnamedSemaphoreLite		m_semaphoreForResource;
 	common::FifoFast<SResourceJob, CASH_AND_MAX_QUEUEE_SIZE>	m_jobQueuee;
-	SConnectionItem*					m_pCurrentItem;
+    SConnectionItem*					m_pCurrentItem;
 };
 
 
@@ -96,8 +98,8 @@ struct SConnectionItem{
 	void*						senderReceiver;
 	volatile int				run;
 	matlab::engine::Serializer	serializer;
-	std::mutex					mutexForBuffers;
-	std::thread					serverThread;
+    STD::mutex					mutexForBuffers;
+    STD::thread					serverThread;
 	struct SConnectionItem*		prev;
 	struct SConnectionItem*		next;
 };

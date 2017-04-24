@@ -182,21 +182,3 @@ static void* ToByteStream(int32_ttt a_type, int a_nNumOfArgs,
 	}
 }
 #endif
-
-
-namespace matlab{ namespace engine{
-
-typedef void* type_void_ptr;
-
-void* GetFuncPointer(int a_fa,...)
-{
-	type_void_ptr pRet;
-	va_list argList;
-
-	va_start(argList, a_fa);
-	pRet = va_arg(argList, type_void_ptr);
-	va_end(argList);
-	return pRet;
-}
-
-}}

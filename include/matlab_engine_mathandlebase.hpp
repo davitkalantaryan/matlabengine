@@ -10,31 +10,18 @@
 #ifndef __matlab_engine_mathandlebase_hpp__
 #define __matlab_engine_mathandlebase_hpp__
 
-#include <mex.h>
+#include "matrix.h"
+#include <stdio.h>
 #include <stdarg.h>
 #include <common_fifofast.hpp>
 #include "matlab_engine_serializer.hpp"
+#include <common_defination.h>
 
-#ifndef __THISCALL__
-#ifdef _MSC_VER
-#define __THISCALL__ __thiscall
-#else
-#define __THISCALL__ 
-#endif
-#endif
-
-// This should be done after check
-#if __cplusplus >= 199711L
-#define __OVERRIDE__	override
-#else
-#define __OVERRIDE__
-#endif
 
 namespace matlab{ namespace engine{
 
 typedef void (__THISCALL__ * TypeClbK)(void*owner,void*arg);
 
-extern void* GetFuncPointer(int,...);
 namespace STDPIPES { enum { STDOUT=1, STDERR=2 }; }
 struct SLsnCallbackItem { void*owner; TypeClbK clbk; void*arg; };
 
@@ -69,7 +56,7 @@ public:
 	virtual void CallOnMatlabThread(void* owner, TypeClbK fpClb,void*arg)=0;
 	template <typename TypeCls>
 	void CallOnMatlabThreadC(TypeCls* a_owner, void (TypeCls::*a_fpClbK)(void*arg), void*a_arg) { 
-		CallOnMatlabThread((void*)a_owner, (TypeClbK)GetFuncPointer(1, a_fpClbK),a_arg); }
+        CallOnMatlabThread((void*)a_owner, (TypeClbK)GetFuncPointer_common(1, a_fpClbK),a_arg); }
 	void PrintFromAnyThread(const char* string);
 
 protected:

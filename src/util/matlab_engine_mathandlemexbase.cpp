@@ -7,6 +7,7 @@
  *
  */
 
+#include <mex.h>
 #include "matlab_engine_mathandlemexbase.hpp"
 #include <stddef.h>
 

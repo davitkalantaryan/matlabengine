@@ -10,7 +10,7 @@
 #define __COMMON_FIFOFAST_HPP__
 
 #include <malloc.h>
-#include "smallmutex.h"
+#include "mutex_cpp11.hpp"
 
 #ifndef LIKELY
 #define LIKELY(_x_) ((_x_))
@@ -36,7 +36,7 @@ protected:
 	const int			m_cnCashSize;
 	int					m_nIndexInCashPlus1;
 	int					m_nNumOfElemets;
-	mutable SmallMutex	m_Mutex;
+        mutable STD::mutex	m_Mutex;
 	SListStr<Type>*		m_pFirst;
 	SListStr<Type>*		m_pLast;
 	SListStr<Type>**	m_ppCashedEntries;

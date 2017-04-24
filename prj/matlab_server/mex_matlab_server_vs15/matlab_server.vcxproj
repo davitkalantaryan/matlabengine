@@ -281,7 +281,6 @@
     <ClInclude Include="..\..\..\include\matlab_pipe_name.h" />
     <ClInclude Include="..\..\..\include\namedpipebase.h" />
     <ClInclude Include="..\..\..\include\namedpipeserver.h" />
-    <ClInclude Include="..\..\..\include\smallmutex.h" />
     <ClInclude Include="..\..\..\include\stdafx.h" />
     <ClInclude Include="..\..\..\src\server\matlab_engine_serverbase.hpp" />
     <ClInclude Include="..\..\..\src\server\matlab_engine_servertcpbase.hpp" />

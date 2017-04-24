@@ -12,18 +12,24 @@
  *
  */
 
+//#include "matrix.h"
+//#include <stdio.h>
 #include "matlab_engine_serverbase.hpp"
 #include "matlab_bytestream_routines.h"
 
 #ifdef WIN32
 #else  // #ifdef WIN32
+#include <signal.h>
 #define SIGNAL_ARGUMENTS    int a_nSigNum, siginfo_t * /*a_pSigInfo*/, void *
 typedef void(*TYPE_SIG_HANDLER)(SIGNAL_ARGUMENTS);
+static void SignalHandlerSimple(SIGNAL_ARGUMENTS);
 #endif // #ifdef WIN32
 
 #ifndef _SOCKET_TIMEOUT_
 #define	_SOCKET_TIMEOUT_		-2001
 #endif
+
+static matlab::engine::ServerBase* s_pCurServer;
 
 matlab::engine::ServerBase::ServerBase(
 	TypeRecvFunc a_funcReceive, TypeSenderFunc a_funcSend,
@@ -49,8 +55,8 @@ matlab::engine::ServerBase::~ServerBase()
 int matlab::engine::ServerBase::StartServer(void)
 {
 	if (m_nRun != 0) { return 0; }
-	m_resourceThread = std::thread(&matlab::engine::ServerBase::ResourceThread, this);
-	m_serverThread = std::thread(&matlab::engine::ServerBase::ServerThread, this);
+    m_resourceThread = STD::thread(&matlab::engine::ServerBase::ResourceThread, this);
+    m_serverThread = STD::thread(&matlab::engine::ServerBase::ServerThread, this);
 	return 0;
 }
 
@@ -90,6 +96,12 @@ void matlab::engine::ServerBase::AddClient(void* a_client)
 	newJob.arg = a_client;
 	m_jobQueuee.AddElement(newJob);
 	m_semaphoreForResource.post();
+}
+
+
+void matlab::engine::ServerBase::DeteleCurrentClient()
+{
+    if(m_pCurrentItem){DeteleClient(m_pCurrentItem);}
 }
 
 void matlab::engine::ServerBase::DeteleClient(struct SConnectionItem* a_clientItem)
@@ -215,6 +227,7 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 	int nIsAnsExist = 0;
 	int32_ttt nBSLin, nBSLout(0), nSeriType;
 
+    s_pCurServer = this;
 	m_pCurrentItem = pItem;
 
 	// Disabling pipe error exit
@@ -280,7 +293,9 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 		}
 
 		pSerializedByteStream = m_pMatHandle->MatlabArrayToByteStream1(nSeriType,nOutputs,vOutputs, &nBSLout);
-		if (!pSerializedByteStream) { pSerializedByteStream = ""; goto returnPoint; }
+        if (!pSerializedByteStream) {
+            pSerializedByteStream = (void*)""; goto returnPoint;
+        }
 		nReturn = 0;
 		cpcInfoOrError = "OK";
 
@@ -307,15 +322,25 @@ returnPoint:
 	sigaction(SIGPIPE, &sigActionOld,NULL);
 #endif  // #ifdef WIN32
 	m_pCurrentItem = NULL;
+    s_pCurServer = NULL;
 
 }
 
 
 /*//////////////////////*/
+#if 0
+void*						senderReceiver;
+volatile int				run;
+matlab::engine::Serializer	serializer;
+std::mutex					mutexForBuffers;
+std::thread					serverThread;
+struct SConnectionItem*		prev;
+struct SConnectionItem*		next;
+#endif
 matlab::engine::SConnectionItem::SConnectionItem(ServerBase* a_pParent, void* a_senderReceiver)
 	:
+    senderReceiver(a_senderReceiver),
 	serverThread(&matlab::engine::ServerBase::ContactThread, a_pParent,this),
-	senderReceiver(a_senderReceiver),
 	prev(NULL),next(NULL)
 {
 }
@@ -336,7 +361,9 @@ static void SignalHandlerSimple(SIGNAL_ARGUMENTS)
 	switch (a_nSigNum)
 	{
 	case SIGPIPE:
-		if (m_pCurrentItem) { DeteleClient(m_pCurrentItem); }
+        if (s_pCurServer) {
+            s_pCurServer->DeteleCurrentClient();
+        }
 		break;
 	default:
 		break;

@@ -65,7 +65,7 @@ bool common::FifoFast_base<Type>::AddElement(const Type& a_ptNew)
 	bool bRet(true);
 	SListStr<Type>* pNewEntr;
 
-	m_Mutex.Lock();
+        m_Mutex.lock();
 	if (m_nNumOfElemets<m_cnMaxSize)
 	{
 		pNewEntr = LIKELY(m_nIndexInCashPlus1) ? m_ppCashedEntries[--m_nIndexInCashPlus1] : new SListStr < Type >;
@@ -78,7 +78,7 @@ bool common::FifoFast_base<Type>::AddElement(const Type& a_ptNew)
 	{
 		bRet = false;
 	}
-	m_Mutex.UnLock();
+        m_Mutex.unlock();
 
 	return bRet;
 }
@@ -88,7 +88,7 @@ bool common::FifoFast_base<Type>::Extract(Type*const& a_ptBuf)
 {
 	bool bRet(true);
 
-	m_Mutex.Lock();
+        m_Mutex.lock();
 	if (m_nNumOfElemets)
 	{
 		*a_ptBuf = m_pFirst->m_tValue;
@@ -110,7 +110,7 @@ bool common::FifoFast_base<Type>::Extract(Type*const& a_ptBuf)
 	{
 		bRet = false;
 	}
-	m_Mutex.UnLock();
+        m_Mutex.unlock();
 	return bRet;
 }
 
@@ -119,9 +119,9 @@ template <class Type>
 int common::FifoFast_base<Type>::size()const
 {
 	int nRet;
-	m_Mutex.Lock();
+        m_Mutex.lock();
 	nRet = m_nNumOfElemets;
-	m_Mutex.UnLock();
+        m_Mutex.unlock();
 	return nRet;
 }
 //////////////////////////////////////////////////////////////
