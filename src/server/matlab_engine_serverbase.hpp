@@ -50,8 +50,8 @@ public:
 	virtual ~ServerBase();
 
 public: // These functions should be called in MATLAB run thread
-	virtual int StartServer(void); // !=0 is error, and system will not be started
-	virtual void StopServer(void);
+	int StartMServer(void); // !=0 is error, and system will not be started
+	void StopMServer(void);
 
 	int GetRun();
 
@@ -99,9 +99,12 @@ struct SConnectionItem{
 	volatile int				run;
 	matlab::engine::Serializer	serializer;
     STD::mutex					mutexForBuffers;
-    STD::thread					serverThread;
 	struct SConnectionItem*		prev;
 	struct SConnectionItem*		next;
+	mxArray* vInputs[MAXIMUM_NUMBER_OF_IN_AND_OUTS];
+	int32_ttt					numOfInputs;
+	common::UnnamedSemaphoreLite semaDone;
+	STD::thread					serverThread;
 };
 
 }}

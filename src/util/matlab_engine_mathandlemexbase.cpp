@@ -18,6 +18,13 @@ mxArray* matlab::engine::MatHandleMexBase::newGetVariable(const char* a_workspac
 }
 
 
+int matlab::engine::MatHandleMexBase::newPutVariable(
+	const char *a_workspace, const char *a_varname, const mxArray *a_pm)
+{
+	return mexPutVariable(a_workspace, a_varname,a_pm);
+}
+
+
 mxArray* matlab::engine::MatHandleMexBase::newEvalStringWithTrap(const char* a_stringToEval)
 {
 	return ::mexEvalStringWithTrap(a_stringToEval);

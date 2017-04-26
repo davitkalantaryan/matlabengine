@@ -10,9 +10,9 @@
  *   ...
  ****************************************************************************/
 
-#ifndef __CPP11_DEFINED__
-
 #include "mutex_cpp11.hpp"
+
+#ifndef __CPP11_DEFINED__
 
 STD::mutex::mutex()
 {

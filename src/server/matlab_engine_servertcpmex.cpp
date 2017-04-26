@@ -22,17 +22,3 @@ matlab::engine::ServerTcpMex::ServerTcpMex()
 matlab::engine::ServerTcpMex::~ServerTcpMex()
 {
 }
-
-
-int matlab::engine::ServerTcpMex::StartServer(void)
-{
-	m_matlabHandle.Start();
-	return ServerBase::StartServer();
-}
-
-
-void matlab::engine::ServerTcpMex::StopServer(void)
-{
-	ServerBase::StopServer();
-	m_matlabHandle.Stop();
-}

@@ -25,6 +25,7 @@ public:
 	virtual void Stop() __OVERRIDE__ {}
 
 	mxArray* newGetVariable(const char* workspace, const char* name) __OVERRIDE__;
+	int newPutVariable(const char *workspace, const char *varname, const mxArray *pm) __OVERRIDE__;
 	mxArray* newEvalStringWithTrap(const char* stringToEval)__OVERRIDE__;
 	mxArray	*newCallMATLABWithTrap(
 		int         nlhs,       /* number of expected outputs */
@@ -33,7 +34,7 @@ public:
 		mxArray     *prhs[],    /* pointer array to inputs */
 		const char  *fcn_name   /* name of function to execute */
 	) __OVERRIDE__;
-	virtual void CallOnMatlabThread(void* owner, TypeClbK fpClb, void*arg) __OVERRIDE__ {}
+	virtual void CallOnMatlabThread(void*, TypeClbK, void*) __OVERRIDE__ {}
 
 };
 

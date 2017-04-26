@@ -12,14 +12,18 @@
 #define __matlab_engine_clienttcp_hpp__
 
 #include <asockettcp.h>
+#include <common_socketbase.hpp>
+#include <common_defination.h>
 
 namespace matlab{ namespace engine{
 
-class ClientTcp : public ASocketTCP
+class ClientTcp : public common::SocketBase, public ASocketTCP
 {
 public:
+	virtual ~ClientTcp() {}
 	int ConnectToServer(const char* serverName, int pid);
-	int RecvData(void* buffer, int bufSize,long timeoutMS);
+	virtual int Recv(void* buffer, int bufSize,long timeoutMS)__OVERRIDE__;
+	virtual int Send(const void* buffer, int bufSize)__OVERRIDE__;
 
 };
 

@@ -32,7 +32,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	static int snAtExitRegistered = 0;
 	int nError(0);
 
-	mexPrintf("Version=19\n");
+	mexPrintf("Version=20\n");
 
 	if (a_nNumInps   && mxIsChar(a_Inputs[0]))
 	{
@@ -66,7 +66,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 		});
 	} // if (!snAtExitRegistered)
 
-	if (!s_serverTcp.GetRun()){s_serverTcp.StartServer();}
+	if (!s_serverTcp.GetRun()){s_serverTcp.StartMServer();}
 
 
 	if (nError){a_Outputs[0] = mxCreateString("Error during processing mex file!");}
@@ -95,6 +95,6 @@ static void PrintHelp(void)
 static void CleanUpMexFile(void)
 {
 	// 1.
-	s_serverTcp.StopServer();
+	s_serverTcp.StopMServer();
 	mexPrintf("matlab_server destroyed!\n");
 }

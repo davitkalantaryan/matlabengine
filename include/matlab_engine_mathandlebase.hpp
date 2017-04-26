@@ -14,7 +14,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <common_fifofast.hpp>
-#include "matlab_engine_serializer.hpp"
 #include <common_defination.h>
 
 
@@ -33,17 +32,11 @@ public:
 
 	virtual void Start() = 0;
 	virtual void Stop() = 0;
-
-#if 1
-	void* MatlabArrayToByteStream1(int32_ttt type, int numOfArgs, mxArray** inputs, int32_ttt* length);
-	void* MatlabArrayToByteStream2(int32_ttt type, int numOfArgs, const mxArray* inputs[], int32_ttt* length);
-	int ByteStreamToMatlabArray(int32_ttt type,int maxOutSize,mxArray** output, 
-		int byteStreamLen,const void* byteStream);
-#endif
 	
 	int newFrprint(int out, const char* fmt, ...);
 
 	virtual mxArray* newGetVariable(const char* workspace, const char* name)=0;
+	virtual int newPutVariable(const char *workspace, const char *varname,const mxArray *pm) = 0;
 	virtual mxArray* newEvalStringWithTrap(const char* stringToEval) = 0;
 	virtual mxArray* newCallMATLABWithTrap(
 		int         nlhs,       /* number of expected outputs */

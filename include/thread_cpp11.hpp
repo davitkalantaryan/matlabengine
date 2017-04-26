@@ -13,21 +13,26 @@
 #define THREAD_CPP11_HPP
 
 #include <common_defination.h>
+#include <common_unnamedsemaphorelite.hpp>
 
 #ifdef __CPP11_DEFINED__
 #include <thread>
 #define STD std
 #else  // #ifdef __CPP11_DEFINED__
 
-namespace STD{
-
 #include <stddef.h>
 #ifdef WIN32
 #include <windows.h>
+#else
+#include <pthread.h>
+#endif
+
+namespace STD{
+
+#ifdef WIN32
 typedef HANDLE thread_native_handle;
 typedef DWORD SYSTHRRETTYPE;
 #else
-#include <pthread.h>
 typedef pthread_t thread_native_handle;
 typedef void* SYSTHRRETTYPE;
 #endif
@@ -48,28 +53,20 @@ public:
     STD::thread& operator=(const STD::thread& rS);
 
     void join();
-
-private:
-    template<typename TClass,typename TArg>
-    struct SArgs{
-        SArgs(void (TClass::*a_startRoutine)(TArg a_aarg),TClass* a_owner,const TArg& a_arg);
-        void (TClass::*startRoutine)(TArg a_arg);TClass* owner;TArg arg;
-    };
+    bool joinable() const;
 
 private:
     void ConstructThreadVoid(TypeClbKVoid func,void* arg);
-    static STD::SYSTHRRETTYPE ThreadStartupRoutine(void* thisThr);
+    void InitAllMembersPrivate();
 
 protected:
-    thread_native_handle    m_threadHandle;
-    TypeClbKVoid            m_startRoutine;
-    void*                   m_threadArg;
-
+    thread_native_handle*    m_pThreadHandle;
+    mutable int              m_nDublicates;
 };
 
-#include "thread_cpp11.tos"
+} // namespace STD{
 
-}
+#include "thread_cpp11.tos"
 
 #endif // #ifdef __CPP11_DEFINED__
 

@@ -19,14 +19,18 @@
 #define STD std
 #else  // #ifdef __CPP11_DEFINED__
 
-namespace STD{
-
 #include <stddef.h>
 #ifdef WIN32
 #include <windows.h>
-typedef HANDLE  mutex_native_handle;
 #else
 #include <pthread.h>
+#endif
+
+namespace STD{
+
+#ifdef WIN32
+typedef HANDLE  mutex_native_handle;
+#else
 typedef pthread_mutex_t mutex_native_handle;
 #endif
 

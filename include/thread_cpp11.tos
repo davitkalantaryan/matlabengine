@@ -21,12 +21,21 @@
 #endif  // #ifndef THREAD_CPP11_HPP
 
 template<typename TClass,typename TArg>
+struct SArgs1{
+    SArgs1(void (TClass::*a_startRoutine)(TArg a_aarg),
+           TClass* a_owner,const TArg& a_arg);
+    void (TClass::*startRoutine)(TArg a_arg);TClass* owner;TArg arg;
+};
+
+
+template<typename TClass,typename TArg>
 static void ThreadFunctionWithArg(void* a_arg);
 
 
 template <typename TClass>
 STD::thread::thread(void (TClass::*a_fpClbK)(),TClass* a_owner)
 {
+    InitAllMembersPrivate();
     ConstructThreadVoid((TypeClbKVoid)GetFuncPointer_common(0,a_fpClbK),(void*)a_owner);
 }
 
@@ -34,14 +43,16 @@ STD::thread::thread(void (TClass::*a_fpClbK)(),TClass* a_owner)
 template<typename TClass,typename TArg>
 STD::thread::thread(void (TClass::*a_fpClbK)(TArg aa_arg),TClass* a_owner,TArg a_arg)
 {
-    SArgs<TClass,TArg>* pArgs = new SArgs<TClass,TArg>(a_fpClbK,a_owner,a_arg);
+    SArgs1<TClass,TArg>* pArgs = new SArgs1<TClass,TArg>(a_fpClbK,a_owner,a_arg);
+    InitAllMembersPrivate();
     ConstructThreadVoid(ThreadFunctionWithArg<TClass,TArg>,(void*)pArgs);
 }
 
 /*///////////////////////////////////////////////////////////////////////////*/
 template<typename TClass,typename TArg>
-STD::thread::thread::SArgs<TClass,TArg>::SArgs(
-        void (TClass::*a_startRoutine)(TArg aa_arg),TClass* a_owner,const TArg& a_arg)
+SArgs1<TClass,TArg>::SArgs1(
+        void (TClass::*a_startRoutine)(TArg aa_arg),
+        TClass* a_owner,const TArg& a_arg)
     :
       startRoutine(a_startRoutine),
       owner(a_owner),
@@ -54,7 +65,7 @@ STD::thread::thread::SArgs<TClass,TArg>::SArgs(
 template<typename TClass,typename TArg>
 static void ThreadFunctionWithArg(void* a_arg)
 {
-    STD::thread::thread::SArgs<TClass,TArg>* pArgs = (STD::thread::thread::SArgs<TClass,TArg>*)a_arg;
+    SArgs1<TClass,TArg>* pArgs = (SArgs1<TClass,TArg>*)a_arg;
     (pArgs->owner->*pArgs->startRoutine)(pArgs->arg);
     delete pArgs;
 }

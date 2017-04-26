@@ -1,0 +1,178 @@
+/*****************************************************************************
+ * File   : mmatlab_engine_mathandlemexbase.cpp
+ * created: 2017 Apr 25
+ *****************************************************************************
+ * Author:	D.Kalantaryan, Tel:+49(0)33762/77552 kalantar
+ * Email :	davit.kalantaryan@desy.de
+ * Mail  :	DESY, Platanenallee 6, 15738 Zeuthen
+ *****************************************************************************
+ * Description
+ *   ...
+ ****************************************************************************/
+
+#include "matlab_engine_mathandleeng.hpp"
+#include <stddef.h>
+#include <memory.h>
+
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
+#define ERROR_VAR_NAME  "a__Str"
+#define DUMP_WARNING(...) do{}while(0)
+
+
+matlab::engine::MatHandleEng::MatHandleEng()
+    :
+      m_pEngine(NULL),
+      m_nRun(0)
+{
+    //
+}
+
+
+matlab::engine::MatHandleEng::~MatHandleEng()
+{
+    //Stop();
+}
+
+
+void matlab::engine::MatHandleEng::Start()
+{
+    if(m_nRun == 1){return;}
+    m_threadMat = STD::thread(&MatHandleEng::MatlabThreadFunction,this);
+    m_nReturn = 0;
+    while((m_pEngine==NULL)&&(m_nReturn==0)){
+#ifdef WIN32
+        Sleep(10);
+#else
+        usleep(10000);
+#endif
+    }
+}
+
+
+void matlab::engine::MatHandleEng::Stop()
+{
+    if(m_nRun == 0){return;}
+    m_nRun = 0;
+    m_semaMat.post();
+    m_threadMat.join();
+}
+
+
+mxArray* matlab::engine::MatHandleEng::newGetVariable(const char* a_workspace, const char* a_name)
+{
+    DUMP_WARNING(a_workspace);
+    return engGetVariable(m_pEngine,a_name);
+}
+
+
+int matlab::engine::MatHandleEng::newPutVariable(
+        const char* a_workspace, const char* a_name,const mxArray *a_pm)
+{
+    DUMP_WARNING(a_workspace);
+    return engPutVariable(m_pEngine,a_name,a_pm);
+}
+
+
+mxArray* matlab::engine::MatHandleEng::newEvalStringWithTrap(const char* a_stringToEval)
+{
+    char vcError[256];
+
+    engEvalString(m_pEngine,"lasterror reset");
+    engEvalString(m_pEngine,a_stringToEval);
+    engEvalString(m_pEngine,"aLastError=lasterror;" ERROR_VAR_NAME "=aLastError.message;");
+    mxArray* pRet = engGetVariable(m_pEngine,ERROR_VAR_NAME);
+    engEvalString(m_pEngine,"clear " ERROR_VAR_NAME);
+
+    vcError[255]=0;
+    mxGetString(pRet,vcError,255);
+
+    if(vcError[0] != 0 ){printf("error=%s\n",vcError);return pRet;} // No memory leack???
+
+    return NULL;
+}
+
+
+mxArray* matlab::engine::MatHandleEng::newCallMATLABWithTrap(
+	int         a_nlhs,       /* number of expected outputs */
+	mxArray     *a_plhs[],    /* pointer array to outputs */
+	int         a_nrhs,       /* number of inputs */
+	mxArray     *a_prhs[],    /* pointer array to inputs */
+	const char  *a_fcn_name   /* name of function to execute */)
+{
+#define BUFFER_SIZE1    4095
+#define VAR_NAME_SZ1    31
+    mxArray* pRet = NULL;
+    int i, nOffset(0);
+    char vcEvalStr[BUFFER_SIZE1+1];
+    char vcVarName[VAR_NAME_SZ1+1];
+
+    if(a_nlhs){nOffset = snprintf(vcEvalStr,BUFFER_SIZE1,"[");}
+    for(i=0;i<a_nlhs-1;++i){nOffset += snprintf(vcEvalStr+nOffset,BUFFER_SIZE1-nOffset,"out__%d,",i);}
+    if(a_nlhs){nOffset += snprintf(vcEvalStr+nOffset,BUFFER_SIZE1-nOffset,"out_%d] = ",a_nlhs-1);}
+    nOffset += snprintf(vcEvalStr+nOffset,BUFFER_SIZE1-nOffset,"%s",a_fcn_name);
+    if(a_nrhs){nOffset += snprintf(vcEvalStr+nOffset,BUFFER_SIZE1-nOffset,"(");}
+    for(i=0;i<a_nrhs-1;++i){
+        nOffset += snprintf(vcEvalStr+nOffset,BUFFER_SIZE1-nOffset,"in__%d,",i);
+        snprintf(vcVarName,VAR_NAME_SZ1,"in__%d",i);
+        engPutVariable(m_pEngine,vcVarName,a_prhs[i]);
+    }
+    if(a_nrhs){
+        nOffset += snprintf(vcEvalStr+nOffset,BUFFER_SIZE1-nOffset,"in__%d);",a_nrhs-1);
+        snprintf(vcVarName,VAR_NAME_SZ1,"in__%d",a_nrhs-1);
+        engPutVariable(m_pEngine,vcVarName,a_prhs[a_nrhs-1]);
+    }
+
+    pRet = this->newEvalStringWithTrap(vcEvalStr);
+
+    if(!pRet)
+    {
+        //
+        for(i=0;i<a_nlhs;++i){
+            snprintf(vcVarName,VAR_NAME_SZ1,"out_%d",i);
+            a_plhs[i] = engGetVariable(m_pEngine,vcVarName);
+        }
+    }
+
+    return pRet;
+}
+
+
+void matlab::engine::MatHandleEng::MatlabThreadFunction()
+{
+    //bool bEngVisible=false;
+    if(m_pEngine){return;}
+    //m_pEngine = engOpen("init_root_and_call matlab_R2016a");
+    //m_pEngine = engOpen(NULL);
+    //m_pEngine = engOpen("matlab -nodesktop");
+    m_pEngine = engOpen("/usr/local/bin/matlab_R2016a");
+    //printf("engine=%p\n",m_pEngine);
+    if(!m_pEngine){m_nReturn=-1;return;}
+    m_nRun=1;
+
+    //if(m_pEngine) {engGetVisible(m_pEngine,&bEngVisible) ;}
+    //printf("nVisible=%d\n",(int)bEngVisible);
+
+    while(m_nRun){
+
+        m_semaMat.wait();
+        HandleAllJobs();
+
+    }//while(m_pEngine){
+
+    engClose(m_pEngine);
+    m_pEngine = NULL;
+}
+
+
+void matlab::engine::MatHandleEng::CallOnMatlabThread(void* a_owner, TypeClbK a_fpClb, void* a_arg)
+{
+    if(m_pEngine){
+        AddMatlabJob(a_owner,a_fpClb,a_arg);
+        m_semaMat.post();
+    }
+}

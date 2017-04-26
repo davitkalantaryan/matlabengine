@@ -22,9 +22,6 @@ public:
 	ServerTcpMex();
 	virtual ~ServerTcpMex();
 
-	int		StartServer(void) __OVERRIDE__;
-	void	StopServer(void) __OVERRIDE__;
-
 private:
 	MatHandleMex	m_matlabHandle;
 

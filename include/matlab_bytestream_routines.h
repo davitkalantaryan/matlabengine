@@ -27,8 +27,6 @@
 #endif
 
 //#include <stddef.h>
-#include <mex.h>
-
 #ifndef u_char_ttt_defined
 typedef unsigned char	u_char_ttt;
 #define u_char_ttt_defined

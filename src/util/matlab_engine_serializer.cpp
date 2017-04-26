@@ -22,90 +22,21 @@
 #include "matlab_engine_serializer.hpp"
 #include <malloc.h>
 #include <string.h>
+#include <matrix.h>
+
+typedef const mxArray* TypeConstMxArray;
 
  //#pragma warning(disable : 4996)
 
-matlab::engine::Serializer::Serializer()
+matlab::engine::Serializer::Serializer(MatHandleBase* a_pMatHandle)
 	:
-	m_nBufferMaxSize3(0),
-	m_nReserved3(0)
-{
-	m_pWholeBuffer3 = (u_char_ttt*)malloc(MATLAB_HEADER_LENGTH);
-	if (!m_pWholeBuffer3){throw "Low memory";}
-
-	m_nBufferMaxSize3 = MATLAB_HEADER_LENGTH;
-
-	m_pnVersion3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::VERSION)));
-	m_pnTypeOfSerialization3 = ((int32_ttt*)((void*)(m_pWholeBuffer3+ OFFSET::TYPE)));
-	m_pnAllMinusHeaderLength3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::NUM_AFTER_HEADER)));
-	m_pnNumOfExpOutsOrError3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::NUM_OUTS)));
-	m_pnMatlabByteStreamLength3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::BYTE_LENGTH)));
-	m_pnReserved3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::RESERVED)));
-
-
-	*m_pnVersion3 = SERIALIZER_VERSION;
-	*m_pnTypeOfSerialization3 = TYPE::RAW1;
-	*m_pnAllMinusHeaderLength3 = 0;
-	*m_pnNumOfExpOutsOrError3 = 0;
-	*m_pnMatlabByteStreamLength3 = 0;
-	*m_pnReserved3 = 0;
-	
+	m_matHandle(a_pMatHandle)
+{	
 }
-
 
 matlab::engine::Serializer::~Serializer()
 {
-	free(m_pWholeBuffer3);
 }
-
-
-int matlab::engine::Serializer::Resize3(
-	int32_ttt a_nNewTypeOfSeri,
-	int32_ttt a_nNewOverAllMinusHeader,
-	int32_ttt a_nNewByteStreamLength,
-	int32_ttt a_nNumOfOutsOrErrCode)
-{
-	int nNewBufferSize = a_nNewOverAllMinusHeader + MATLAB_HEADER_LENGTH;
-	if (nNewBufferSize > m_nBufferMaxSize3)
-	{
-		u_char_ttt* pTempBuffer = (u_char_ttt*)realloc(m_pWholeBuffer3, nNewBufferSize);
-		if (!pTempBuffer)
-		{
-			// handle this case
-			return -1;
-		}
-		m_pWholeBuffer3 = pTempBuffer;
-		m_nBufferMaxSize3 = nNewBufferSize;
-		
-		m_pnVersion3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::VERSION)));
-		m_pnTypeOfSerialization3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::TYPE)));
-		m_pnAllMinusHeaderLength3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::NUM_AFTER_HEADER)));
-		m_pnNumOfExpOutsOrError3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::NUM_OUTS)));
-		m_pnMatlabByteStreamLength3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::BYTE_LENGTH)));
-		m_pnReserved3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::RESERVED)));
-	}
-
-	*m_pnVersion3 = SERIALIZER_VERSION;
-	*m_pnTypeOfSerialization3 = a_nNewTypeOfSeri;
-	*m_pnAllMinusHeaderLength3 = a_nNewOverAllMinusHeader;
-	*m_pnNumOfExpOutsOrError3 = a_nNumOfOutsOrErrCode;
-	*m_pnMatlabByteStreamLength3 = a_nNewByteStreamLength;
-	*m_pnReserved3 = 0;
-
-	return 0;
-}
-
-u_char_ttt* matlab::engine::Serializer::GetBufferForReceive3()
-{
-	return m_pWholeBuffer3+ MATLAB_HEADER_LENGTH;
-}
-
-
-const u_char_ttt* matlab::engine::Serializer::GetBufferForSend3()const
-{
-	return m_pWholeBuffer3;
-}
-
 
 const char* matlab::engine::Serializer::MatlabScriptName3()const
 {
@@ -113,61 +44,162 @@ const char* matlab::engine::Serializer::MatlabScriptName3()const
 }
 
 
+int32_ttt matlab::engine::Serializer::NumOfExpOutsOrError()const
+{
+	return *m_pnNumOfExpOutsOrError3;
+}
+
+
 char* matlab::engine::Serializer::MatlabScriptNamePrivate3()const
 {
-	return (char*)(m_pWholeBuffer3 + MATLAB_HEADER_LENGTH + (*m_pnMatlabByteStreamLength3));
+	return (char*)(m_pWholeBuffer3 +COMMON_SERI_HEADER_LEN+(*m_pnMatlabByteStreamLength3));
 }
 
-
-u_char_ttt* matlab::engine::Serializer::VaribleByteStream3()
-{
-	return m_pWholeBuffer3 + MATLAB_HEADER_LENGTH;
-}
-
-
-int32_ttt matlab::engine::Serializer::VaribleByteStreamLength3()const
-{
-	return (*m_pnMatlabByteStreamLength3);
-}
-
-int32_ttt matlab::engine::Serializer::SecondReceiveBufLength3()const
-{
-	return (*m_pnAllMinusHeaderLength3);
-}
-
-
-int32_ttt matlab::engine::Serializer::SeriType()const
-{
-	return *m_pnTypeOfSerialization3;
-}
-
-int32_ttt matlab::engine::Serializer::SendBufLength3()const
-{
-	return (*m_pnAllMinusHeaderLength3) + MATLAB_HEADER_LENGTH;
-}
-
-int32_ttt matlab::engine::Serializer::NumOfExpOutsOrError3()const
-{
-	return (*m_pnNumOfExpOutsOrError3);
-}
-
-
-int matlab::engine::Serializer::SetSendParams3(
-	int32_ttt a_nNewTypeOfSeri,
+int	matlab::engine::Serializer::SendScriptNameAndArrays(
+	common::SocketBase* a_pSocket,
+	int32_ttt a_nVersion,
+	int32_ttt a_nTypeOfSeri,
 	const char* a_scriptName,
-	int32_ttt a_nInOrOutpLen, const void* a_inOrOut,
-	int32_ttt a_nOutsOrErr)
+	int32_ttt a_numOfOutsOrError,
+	int32_ttt a_numOfArrays,
+	const void* a_vpArrays[])
 {
-	int32_ttt nStrLenPlus1 = (int32_ttt)strlen(a_scriptName) + 1;
-	int32_ttt nOverAllMinusHeader = nStrLenPlus1 + a_nInOrOutpLen;
+	mxArray* pcByteArray = NULL;
+	void* pByteStream(NULL);
+	int nStrlenPlus1;
+	int nByteStreamLen(0);
 
-	int nReturn = this->Resize3(a_nNewTypeOfSeri,nOverAllMinusHeader, a_nInOrOutpLen, a_nOutsOrErr);
+	if (!a_scriptName) { a_scriptName = ""; }
+	nStrlenPlus1 = 1 + (int)strlen(a_scriptName);
 
-	if (nReturn) { return nReturn; }
+	switch (a_nTypeOfSeri)
+	{
+	case SERI_TYPE::MAT_UNDOCU:
+	{
+		const TypeConstMxArray* vArrays = (const TypeConstMxArray*)a_vpArrays;
+		mxArray* pCellArray = mxCreateCellMatrix(1,a_numOfArrays);
 
-	memcpy(this->MatlabScriptNamePrivate3(), a_scriptName, nStrLenPlus1);
-	if (a_nInOrOutpLen && a_inOrOut) {
-		memcpy(this->VaribleByteStream3(), a_inOrOut, a_nInOrOutpLen);
+		if (!pCellArray) {/*error handling?*/return 0; }
+		for (int i(0); i < a_numOfArrays; ++i){
+			mxSetCell(pCellArray, i, mxDuplicateArray(vArrays[i]));
+		}
+		m_matHandle->newCallMATLABWithTrap(1,&pcByteArray,1,&pCellArray,"getByteStreamFromArray");
+		mxDestroyArray(pCellArray);
+		if (!pcByteArray) { return 0; }
+		nByteStreamLen = (int32_ttt)(mxGetNumberOfElements(pcByteArray)*mxGetElementSize(pcByteArray));
+		pByteStream = mxGetData(pcByteArray);
 	}
-	return 0;
+	break; // case TYPE::MAT_UNDOCU:
+
+	case SERI_TYPE::RAW1:
+	{
+	}
+	break; // case TYPE::RAW1:
+
+	default:
+		break;
+	} // switch (a_type)
+
+	common::Serializer::Resize(nStrlenPlus1 + nByteStreamLen);
+
+	*m_pnVersion3 = SERIALIZER_VERSION;
+	*m_pnTypeOfSerialization3 = a_nTypeOfSeri;
+	*m_pnAllMinusHeaderLength3 = nStrlenPlus1 + nByteStreamLen;
+	*m_pnNumOfExpOutsOrError3 = a_numOfOutsOrError;
+	*m_pnMatlabByteStreamLength3 = nByteStreamLen;
+	*m_pnReserved3 = 0;
+
+	if(nByteStreamLen && pByteStream){
+		memcpy(m_pWholeBuffer3+COMMON_SERI_HEADER_LEN,pByteStream,nByteStreamLen);
+	}
+	memcpy(m_pWholeBuffer3+COMMON_SERI_HEADER_LEN+nByteStreamLen,a_scriptName,nStrlenPlus1);
+
+	nByteStreamLen=a_pSocket->Send(
+		m_pWholeBuffer3, (*m_pnAllMinusHeaderLength3) + COMMON_SERI_HEADER_LEN);
+
+	// Cleanup
+	switch (a_nTypeOfSeri)
+	{
+	case SERI_TYPE::MAT_UNDOCU:
+	{
+		mxDestroyArray(pcByteArray);
+	}
+	break;
+	default: break;
+	}
+
+	return nByteStreamLen;
+}
+
+
+int	matlab::engine::Serializer::ReceiveScriptNameAndArrays(
+	common::SocketBase* a_pSocket,
+	int32_ttt a_nNumOfArraysIn,
+	void* a_vpArrays[],
+	int32_ttt* a_pnNumOfArraysOut,
+	long a_timeoutMS)
+{
+	mxArray* pCellArrayFromByteStream=NULL;
+	int32_ttt& nNumOfArray = *a_pnNumOfArraysOut;
+	int nReceived= a_pSocket->Recv(m_pWholeBuffer3,COMMON_SERI_HEADER_LEN,a_timeoutMS);
+
+	nNumOfArray = 0;
+	if (nReceived!=COMMON_SERI_HEADER_LEN){
+		if(nReceived>0){nReceived=-1;}
+		return nReceived;
+	}
+	if(*m_pnAllMinusHeaderLength3<0){return ACTION_TYPE::REMOTE_CALL;}
+	common::Serializer::Resize(*m_pnAllMinusHeaderLength3);
+	nReceived= a_pSocket->Recv(
+		m_pWholeBuffer3+COMMON_SERI_HEADER_LEN,*m_pnAllMinusHeaderLength3,a_timeoutMS);
+	if (nReceived != (*m_pnAllMinusHeaderLength3)) { return -2; }
+
+	switch (*m_pnTypeOfSerialization3)
+	{
+	case SERI_TYPE::MAT_UNDOCU:
+	{
+		void* pSerializedData;
+		mxArray** vOutputs = (mxArray**)a_vpArrays;
+		mxArray* pExceptionReturned;
+		mxArray* pSerializedInputCell = mxCreateNumericMatrix(
+			1,*m_pnMatlabByteStreamLength3,mxUINT8_CLASS,mxREAL);
+
+		if (!pSerializedInputCell) {/*report*/return -1; }
+		pSerializedData = mxGetData(pSerializedInputCell);
+		memcpy(pSerializedData,m_pWholeBuffer3+COMMON_SERI_HEADER_LEN,*m_pnMatlabByteStreamLength3);
+
+		pExceptionReturned = m_matHandle->newCallMATLABWithTrap(
+			1, &pCellArrayFromByteStream, 1,&pSerializedInputCell, "getArrayFromByteStream");
+		mxDestroyArray(pSerializedInputCell);
+		if (pExceptionReturned) { 
+			m_matHandle->newPutVariable("base", "excpept", pExceptionReturned);
+			return -2;
+		}
+		if (!pCellArrayFromByteStream) {/*report*/return -3; }
+
+		nNumOfArray = (int)mxGetN(pCellArrayFromByteStream);
+		nNumOfArray = nNumOfArray > a_nNumOfArraysIn ? a_nNumOfArraysIn : nNumOfArray;
+
+		for (int i(0); i < nNumOfArray; ++i){
+			vOutputs[i] = mxDuplicateArray(mxGetCell(pCellArrayFromByteStream,i));
+		}
+	}
+	break; // case TYPE::MAT_UNDOCU:
+	default:
+		break;
+	} // switch (a_type)
+
+
+	  // Cleanup
+	switch (*m_pnTypeOfSerialization3)
+	{
+	case SERI_TYPE::MAT_UNDOCU:
+	{
+		if(pCellArrayFromByteStream){mxDestroyArray(pCellArrayFromByteStream);}
+	}
+	break;
+	default: break;
+	}
+
+	return ACTION_TYPE::REMOTE_CALL;
 }

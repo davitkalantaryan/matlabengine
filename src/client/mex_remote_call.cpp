@@ -34,22 +34,18 @@ struct SConnectItem {
 
 static matlab::engine::MatHandleMexBase		s_matHandle;
 static int									s_nInited = 0;
-static matlab::engine::Serializer			s_serializeDes;
+static matlab::engine::Serializer			s_serializeDes(&s_matHandle);
 static SConnectItem*						s_pCurrentConnect=NULL;
 static int									s_nDebug = 0;
 static std::map<std::string,SConnectItem*>	s_mpConnections;
 
+typedef const void* TypeConstVoidPtr;
 
 void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	int a_nNumInps, const mxArray*a_Inputs[])
 {
-	void* pByteStream;
-    matlab::engine::SDataHeader aInfo;
     int i,nReceived,nAdrStrLenPlus15;
-    int32_ttt nBSL;
-	//int32_ttt nSeriType = matlab::engine::TYPE::RAW1;
-	int32_ttt nSeriType = matlab::engine::TYPE::MAT_UNDOCU;
-	//long lnTimeout;
+	int32_ttt nOutputs,nSeriType = matlab::engine::SERI_TYPE::MAT_UNDOCU;
 
 	if (!s_nInited) {
 		ASocketB::Initialize();
@@ -147,20 +143,13 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 		else { mexPrintf("No running job!\n"); return; }
 	}
 
-	// Converst to MATLAB Byte stream remaining arguments
-	pByteStream = s_matHandle.MatlabArrayToByteStream2(nSeriType,a_nNumInps-2, a_Inputs+2,&nBSL);
-	if (!pByteStream)
-	{
-		mexErrMsgTxt("Unable to create buffer for the cell!\n");
-		return;
-	}
-	if (s_nDebug) { mexPrintf("BSL=%d\n", (int)nBSL); }
-
-	s_serializeDes.SetSendParams3(nSeriType,pcScriptName, nBSL,pByteStream,a_nNumOuts);
-
 	s_pCurrentConnect->isHandled = false;
-	s_pCurrentConnect->socketTcp.SendData(
-		s_serializeDes.GetBufferForSend3(),s_serializeDes.SendBufLength3());
+
+	nReceived=s_serializeDes.SendScriptNameAndArrays(
+		&s_pCurrentConnect->socketTcp,SERIALIZER_VERSION,nSeriType,
+		pcScriptName,a_nNumOuts,a_nNumInps-2,(TypeConstVoidPtr*)(a_Inputs+2));
+
+	if(nReceived<0){goto cleanCurrentConn;}
 	s_pCurrentConnect->isJobActive = true;
 
 	if (s_pCurrentConnect->timeoutMS == NO_RECEIVE) 
@@ -170,35 +159,13 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	
 	// receive answer
 recieveResult:
-	nReceived= s_pCurrentConnect->socketTcp.RecvData(&aInfo, MATLAB_HEADER_LENGTH, 
-		s_pCurrentConnect->timeoutMS);
-	if (nReceived == _SOCKET_TIMEOUT_)
-	{
-		goto returnWithTimeout;
-	}
-	else if (nReceived != MATLAB_HEADER_LENGTH)
-	{
-		s_mpConnections.erase(s_pCurrentConnect->serverName);
-		s_pCurrentConnect->socketTcp.Close();
-		delete s_pCurrentConnect;
-		s_pCurrentConnect = NULL;
-		mexErrMsgTxt("Error durring calling script in the remote host");
-		return;
-	}
-	else if (aInfo.allMinusHeader > 0) {
-		s_serializeDes.Resize3(nSeriType,aInfo.allMinusHeader, aInfo.byteStrLength,aInfo.numberOfOuts);
-		s_pCurrentConnect->socketTcp.RecvData(s_serializeDes.GetBufferForReceive3(), 
-			aInfo.allMinusHeader, 20000);
-		a_nNumOuts = a_nNumOuts < 1 ? 1 : a_nNumOuts;
-		s_pCurrentConnect->isJobActive = false;
-		if ( (aInfo.numberOfOuts < 0) || (aInfo.allMinusHeader<=0))
-		{
-			mexErrMsgTxt("Error durring calling script in the remote host");
-			return;
-		}
-		s_matHandle.ByteStreamToMatlabArray(nSeriType, a_nNumOuts,a_Outputs,
-			aInfo.byteStrLength,s_serializeDes.VaribleByteStream3());
-	} // else if (aInfo.overallMin8 > 0)
+	a_nNumOuts = a_nNumOuts < 1 ? 1 : a_nNumOuts;
+	nReceived=s_serializeDes.ReceiveScriptNameAndArrays(
+		&s_pCurrentConnect->socketTcp,
+		a_nNumOuts,(void**)a_Outputs, &nOutputs,s_pCurrentConnect->timeoutMS);
+
+	if (nReceived == _SOCKET_TIMEOUT_){goto returnWithTimeout;}
+	else if (nReceived < 0){goto cleanCurrentConn;}
 
 	return;
 returnWithTimeout:
@@ -207,6 +174,14 @@ returnWithTimeout:
 	{
 		a_Outputs[i] = mxCreateString("job_active");
 	}
+	return;
+
+cleanCurrentConn:
+	s_mpConnections.erase(s_pCurrentConnect->serverName);
+	s_pCurrentConnect->socketTcp.Close();
+	delete s_pCurrentConnect;
+	s_pCurrentConnect = NULL;
+	mexErrMsgTxt("Error durring calling script in the remote host");
 
 }
 

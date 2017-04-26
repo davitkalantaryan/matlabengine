@@ -253,6 +253,9 @@
     <ClCompile Include="..\..\..\src\client\mex_remote_call.cpp" />
     <ClCompile Include="..\..\..\src\common\asocketb.cpp" />
     <ClCompile Include="..\..\..\src\common\asockettcp.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_functionalities.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_serializer.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_socketbase.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_bytestream_routines.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlebase.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlemexbase.cpp" />
@@ -263,6 +266,8 @@
     <ClInclude Include="..\..\..\include\asocketb.h" />
     <ClInclude Include="..\..\..\include\asockettcp.h" />
     <ClInclude Include="..\..\..\include\common_fifofast.hpp" />
+    <ClInclude Include="..\..\..\include\common_serializer.hpp" />
+    <ClInclude Include="..\..\..\include\common_socketbase.hpp" />
     <ClInclude Include="..\..\..\include\matlab_bytestream_routines.h" />
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlebase.hpp" />
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlemexbase.hpp" />

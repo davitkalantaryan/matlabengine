@@ -252,6 +252,9 @@
     <ClCompile Include="..\..\..\src\common\aservertcp.cpp" />
     <ClCompile Include="..\..\..\src\common\asocketb.cpp" />
     <ClCompile Include="..\..\..\src\common\asockettcp.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_functionalities.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_serializer.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_socketbase.cpp" />
     <ClCompile Include="..\..\..\src\common\listener_on_gui_thread_win.cpp" />
     <ClCompile Include="..\..\..\src\common\namedpipebase.cpp" />
     <ClCompile Include="..\..\..\src\common\namedpipeserver.cpp" />
@@ -271,6 +274,8 @@
     <ClInclude Include="..\..\..\include\asocketb.h" />
     <ClInclude Include="..\..\..\include\asockettcp.h" />
     <ClInclude Include="..\..\..\include\common_fifofast.hpp" />
+    <ClInclude Include="..\..\..\include\common_serializer.hpp" />
+    <ClInclude Include="..\..\..\include\common_socketbase.hpp" />
     <ClInclude Include="..\..\..\include\common_unnamedsemaphorelite.hpp" />
     <ClInclude Include="..\..\..\include\listener_on_gui_thread.hpp" />
     <ClInclude Include="..\..\..\include\matlab_bytestream_routines.h" />
