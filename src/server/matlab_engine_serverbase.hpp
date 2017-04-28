@@ -50,7 +50,7 @@ public:
 	virtual ~ServerBase();
 
 public: // These functions should be called in MATLAB run thread
-	int StartMServer(void); // !=0 is error, and system will not be started
+	int StartMServer(int enngNumber); // !=0 is error, and system will not be started
 	void StopMServer(void);
 
 	int GetRun();
@@ -62,7 +62,7 @@ protected:
 	void DeteleClient(struct SConnectionItem* client);
 
 private:
-	virtual int StartServerPrivate(void) = 0; // !=0 is error, and system will not be started
+	virtual void StartServerPrivate(int engNumber) = 0; // !=0 is error, and system will not be started
 	virtual void StopServerPrivate(void) = 0;
 
 private:
@@ -70,7 +70,7 @@ private:
 	void CallMatlabFunction(void* a_arg);
 	void ContactThread(struct SConnectionItem* connectionItem);
 	void ResourceThread(void);
-	void ServerThread(void);
+	void ServerThread(int engNumber);
 	//void OutputHandlerThread(void);
 
 	//virtual int CreateServer(void)=0;
@@ -89,6 +89,8 @@ protected:
 	common::UnnamedSemaphoreLite		m_semaphoreForResource;
 	common::FifoFast<SResourceJob, CASH_AND_MAX_QUEUEE_SIZE>	m_jobQueuee;
     SConnectionItem*					m_pCurrentItem;
+	int									m_nReturnFromServerThread;
+	volatile int						m_nServerRuns;
 };
 
 
@@ -96,14 +98,10 @@ struct SConnectionItem{
 	SConnectionItem(ServerBase* pParent,void* senderReceiver);
 	~SConnectionItem();
 	void*						senderReceiver;
-	volatile int				run;
-	matlab::engine::Serializer	serializer;
-    STD::mutex					mutexForBuffers;
 	struct SConnectionItem*		prev;
 	struct SConnectionItem*		next;
-	mxArray* vInputs[MAXIMUM_NUMBER_OF_IN_AND_OUTS];
-	int32_ttt					numOfInputs;
-	common::UnnamedSemaphoreLite semaDone;
+	volatile int				run;
+	matlab::engine::Serializer	serializer;
 	STD::thread					serverThread;
 };
 

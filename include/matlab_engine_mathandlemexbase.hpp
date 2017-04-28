@@ -21,7 +21,7 @@ public:
 	MatHandleMexBase() {}
 	virtual ~MatHandleMexBase() {}
 
-	virtual void Start() __OVERRIDE__  {}
+	virtual int Start() __OVERRIDE__  {return START_RET::STARTED;}
 	virtual void Stop() __OVERRIDE__ {}
 
 	mxArray* newGetVariable(const char* workspace, const char* name) __OVERRIDE__;
@@ -34,7 +34,8 @@ public:
 		mxArray     *prhs[],    /* pointer array to inputs */
 		const char  *fcn_name   /* name of function to execute */
 	) __OVERRIDE__;
-	virtual void CallOnMatlabThread(void*, TypeClbK, void*) __OVERRIDE__ {}
+	virtual void SyncCallOnMatlabThread(void*, TypeClbK, void*) __OVERRIDE__ {}
+	virtual void AsyncCallOnMatlabThread(void*, TypeClbK, void*) __OVERRIDE__ {}
 
 };
 

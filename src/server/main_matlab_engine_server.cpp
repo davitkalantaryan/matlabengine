@@ -12,6 +12,7 @@
 
 #include "matlab_engine_servertcpeng.hpp"
 #include <signal.h>
+#include <common_argument_parser.hpp>
 
 #ifdef WIN32
 #else  // #ifdef WIN32
@@ -21,8 +22,30 @@ typedef void(*TYPE_SIG_HANDLER)(int);
 
 static volatile int s_nRun;
 
-int main()
+int main(int a_argc, char* a_argv[])
 {
+    int nEngineNumber(0);
+    common::argument_parser aParser;
+
+    aParser.AddOption("--engine-number",1);
+    aParser.AddOption("-en",1);
+    aParser.AddOption("--help",0);
+    aParser.AddOption("-h",0);
+
+    if(a_argc>1)
+    {
+        int nArgs(a_argc-1);
+        aParser.ParseCommandLine(nArgs,a_argv);
+    }
+
+    if(aParser["--help"] || aParser["-h"]){
+        printf("%s\n", aParser.HelpString().c_str());
+        return 0;
+    }
+
+    if(aParser["--engine-number"]){nEngineNumber=atoi(aParser["--engine-number"]);}
+    else if(aParser["-en"]){nEngineNumber=atoi(aParser["-en"]);}
+
 #ifdef WIN32
 #else
 #if 0
@@ -40,16 +63,12 @@ int main()
     //freopen( "/dev/null", "w", stdout);
 
     matlab::engine::ServerTcpEng aServer;
-    aServer.StartMServer();
+    aServer.StartMServer(nEngineNumber);
     s_nRun = 1;
 
     while(s_nRun){
 
-#ifdef WIN32
         Sleep(100000);
-#else  // #ifdef WIN32
-        usleep(100000000);
-#endif  // #ifdef WIN32
     }
 
     aServer.StopMServer();

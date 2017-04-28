@@ -1,0 +1,63 @@
+/*
+ *	File: common_argument_parser.tos
+ *
+ *	Created on: 25 Nov, 2016
+ *	Created by: Davit Kalantaryan (Email: davit.kalantaryan@desy.de)
+ *
+ *  This file implements the class for parsing 
+ *  command line arguments
+ *  boost has classes for this purpose,
+ *  but sometime dependency from boost is not needed
+ *
+ */
+#ifndef __common_argument_parser_tos__
+#define __common_argument_parser_tos__
+
+#ifndef __common_argument_parser_hpp__
+#error Direct include not allowed!
+#endif
+#ifdef development_stage
+#include "argument_parser.hpp"
+#endif
+
+#ifdef __cplusplus
+
+
+template <typename TypeArgc, typename TypeArgv>
+void common::argument_parser::ParseCommandLine(TypeArgc a_argc, TypeArgv a_argv[])
+{
+    int nIsArg;
+    const char *aOption0, *aOptionVal;
+
+    for (TypeArgc i(0); i<a_argc;)
+	{
+        //pnIsArg = m_htOptionsIn.LookupStr(a_argv[i]);
+        if (m_htOptionsIn.count(a_argv[i]))
+		{
+            nIsArg = m_htOptionsIn[a_argv[i]];
+			aOption0 = a_argv[i];
+			aOptionVal = "";
+			if (i < (--a_argc))
+			{
+				memmove(a_argv + i, a_argv + i + 1, (a_argc - i)*sizeof(TypeArgv));
+                if ((nIsArg)&&(i<(a_argc--)))
+				{
+					aOptionVal = a_argv[i];
+					memmove(a_argv + i, a_argv + i + 1, (a_argc - i)*sizeof(TypeArgv)); 
+				}
+			}
+            m_htOptionsFound.insert(std::pair<std::string, std::string>(aOption0,aOptionVal));
+		}
+		else  // if (pnIsArg)
+		{
+			++i;
+		}
+	}// for (int i(0); i<a_argc;)
+}
+
+
+#else   // #ifdef __cplusplus
+#endif  // #ifdef __cplusplus
+
+
+#endif  // #ifndef __common_argument_parser_tos__

@@ -132,26 +132,47 @@ int	matlab::engine::Serializer::SendScriptNameAndArrays(
 }
 
 
-int	matlab::engine::Serializer::ReceiveScriptNameAndArrays(
-	common::SocketBase* a_pSocket,
+int	matlab::engine::Serializer::ReceiveHeaderScriptNameAndArrays(
+	common::SocketBase* a_pSocket, long a_timeoutMS,
 	int32_ttt a_nNumOfArraysIn,
 	void* a_vpArrays[],
-	int32_ttt* a_pnNumOfArraysOut,
-	long a_timeoutMS)
+	int32_ttt* a_pnNumOfArraysOut)
 {
-	mxArray* pCellArrayFromByteStream=NULL;
-	int32_ttt& nNumOfArray = *a_pnNumOfArraysOut;
-	int nReceived= a_pSocket->Recv(m_pWholeBuffer3,COMMON_SERI_HEADER_LEN,a_timeoutMS);
+	int nReturn = ReceiveHeader(a_pSocket, a_timeoutMS);
+	if(nReturn>=0){
+		*a_pnNumOfArraysOut = ReceiveScriptNameAndArrays2(
+			a_pSocket, a_timeoutMS,
+			a_nNumOfArraysIn,a_vpArrays);
 
-	nNumOfArray = 0;
-	if (nReceived!=COMMON_SERI_HEADER_LEN){
-		if(nReceived>0){nReceived=-1;}
+	}
+	return nReturn;
+}
+
+
+int	matlab::engine::Serializer::ReceiveHeader(common::SocketBase* a_pSocket,long a_timeoutMS)
+{
+	mxArray* pCellArrayFromByteStream = NULL;
+	int nReceived = a_pSocket->Recv(m_pWholeBuffer3, COMMON_SERI_HEADER_LEN, a_timeoutMS);
+
+	if (nReceived != COMMON_SERI_HEADER_LEN) {
+		if (nReceived>0) { nReceived = -1; }
 		return nReceived;
 	}
-	if(*m_pnAllMinusHeaderLength3<0){return ACTION_TYPE::REMOTE_CALL;}
-	common::Serializer::Resize(*m_pnAllMinusHeaderLength3);
-	nReceived= a_pSocket->Recv(
-		m_pWholeBuffer3+COMMON_SERI_HEADER_LEN,*m_pnAllMinusHeaderLength3,a_timeoutMS);
+	if (*m_pnAllMinusHeaderLength3<0) { return ACTION_TYPE::REMOTE_CALL; }
+	if (common::Serializer::Resize(*m_pnAllMinusHeaderLength3)) { return -2; }
+	return ACTION_TYPE::REMOTE_CALL;
+}
+
+int32_ttt	matlab::engine::Serializer::ReceiveScriptNameAndArrays2(
+	common::SocketBase* a_pSocket, long a_timeoutMS,
+	int32_ttt a_nNumOfArraysIn,
+	void* a_vpArrays[])
+{
+	mxArray* pCellArrayFromByteStream = NULL;
+	int32_ttt nNumOfArray = 0;
+	int nReceived = a_pSocket->Recv(
+		m_pWholeBuffer3 + COMMON_SERI_HEADER_LEN, *m_pnAllMinusHeaderLength3, a_timeoutMS);
+
 	if (nReceived != (*m_pnAllMinusHeaderLength3)) { return -2; }
 
 	switch (*m_pnTypeOfSerialization3)
@@ -162,16 +183,16 @@ int	matlab::engine::Serializer::ReceiveScriptNameAndArrays(
 		mxArray** vOutputs = (mxArray**)a_vpArrays;
 		mxArray* pExceptionReturned;
 		mxArray* pSerializedInputCell = mxCreateNumericMatrix(
-			1,*m_pnMatlabByteStreamLength3,mxUINT8_CLASS,mxREAL);
+			1, *m_pnMatlabByteStreamLength3, mxUINT8_CLASS, mxREAL);
 
 		if (!pSerializedInputCell) {/*report*/return -1; }
 		pSerializedData = mxGetData(pSerializedInputCell);
-		memcpy(pSerializedData,m_pWholeBuffer3+COMMON_SERI_HEADER_LEN,*m_pnMatlabByteStreamLength3);
+		memcpy(pSerializedData, m_pWholeBuffer3 + COMMON_SERI_HEADER_LEN, *m_pnMatlabByteStreamLength3);
 
 		pExceptionReturned = m_matHandle->newCallMATLABWithTrap(
-			1, &pCellArrayFromByteStream, 1,&pSerializedInputCell, "getArrayFromByteStream");
+			1, &pCellArrayFromByteStream, 1, &pSerializedInputCell, "getArrayFromByteStream");
 		mxDestroyArray(pSerializedInputCell);
-		if (pExceptionReturned) { 
+		if (pExceptionReturned) {
 			m_matHandle->newPutVariable("base", "excpept", pExceptionReturned);
 			return -2;
 		}
@@ -180,8 +201,8 @@ int	matlab::engine::Serializer::ReceiveScriptNameAndArrays(
 		nNumOfArray = (int)mxGetN(pCellArrayFromByteStream);
 		nNumOfArray = nNumOfArray > a_nNumOfArraysIn ? a_nNumOfArraysIn : nNumOfArray;
 
-		for (int i(0); i < nNumOfArray; ++i){
-			vOutputs[i] = mxDuplicateArray(mxGetCell(pCellArrayFromByteStream,i));
+		for (int i(0); i < nNumOfArray; ++i) {
+			vOutputs[i] = mxDuplicateArray(mxGetCell(pCellArrayFromByteStream, i));
 		}
 	}
 	break; // case TYPE::MAT_UNDOCU:
@@ -195,11 +216,11 @@ int	matlab::engine::Serializer::ReceiveScriptNameAndArrays(
 	{
 	case SERI_TYPE::MAT_UNDOCU:
 	{
-		if(pCellArrayFromByteStream){mxDestroyArray(pCellArrayFromByteStream);}
+		if (pCellArrayFromByteStream) { mxDestroyArray(pCellArrayFromByteStream); }
 	}
 	break;
 	default: break;
 	}
 
-	return ACTION_TYPE::REMOTE_CALL;
+	return nNumOfArray;
 }

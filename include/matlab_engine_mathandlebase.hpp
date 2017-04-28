@@ -15,14 +15,19 @@
 #include <stdarg.h>
 #include <common_fifofast.hpp>
 #include <common_defination.h>
-
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#define Sleep(__X__)	usleep(1000*(__X__))
+#endif
 
 namespace matlab{ namespace engine{
 
 typedef void (__THISCALL__ * TypeClbK)(void*owner,void*arg);
 
 namespace STDPIPES { enum { STDOUT=1, STDERR=2 }; }
-struct SLsnCallbackItem { void*owner; TypeClbK clbk; void*arg; };
+namespace START_RET { enum { STARTED = 0, ALREADY_RUN = 1,ENG_ERROR=-1 }; }
 
 class MatHandleBase
 {
@@ -30,7 +35,7 @@ public:
 	MatHandleBase();
 	virtual ~MatHandleBase();
 
-	virtual void Start() = 0;
+	virtual int Start() = 0; // 0 no_error
 	virtual void Stop() = 0;
 	
 	int newFrprint(int out, const char* fmt, ...);
@@ -46,21 +51,19 @@ public:
 		const char  *fcn_name   /* name of function to execute */
 	)=0;
 
-	virtual void CallOnMatlabThread(void* owner, TypeClbK fpClb,void*arg)=0;
+	virtual void SyncCallOnMatlabThread(void* owner, TypeClbK fpClb,void*arg)=0;
+	virtual void AsyncCallOnMatlabThread(void* owner, TypeClbK fpClb, void*arg) = 0;
 	template <typename TypeCls>
-	void CallOnMatlabThreadC(TypeCls* a_owner, void (TypeCls::*a_fpClbK)(void*arg), void*a_arg) { 
-        CallOnMatlabThread((void*)a_owner, (TypeClbK)GetFuncPointer_common(1, a_fpClbK),a_arg); }
-	void PrintFromAnyThread(const char* string);
-
-protected:
-	void AddMatlabJob(void* owner, TypeClbK fpClb, void* arg);
-	void HandleAllJobs(void);
-
-private:
-	void PrintOnMatlabThreadPrivate(void* string);
+	void SyncCallOnMatlabThreadC(TypeCls* a_owner, void (TypeCls::*a_fpClbK)(void*arg), void*a_arg) { 
+        SyncCallOnMatlabThread((void*)a_owner, (TypeClbK)GetFuncPointer_common(1, a_fpClbK),a_arg); }
+	template <typename TypeCls>
+	void AsyncCallOnMatlabThreadC(TypeCls* a_owner, void (TypeCls::*a_fpClbK)(void*arg), void*a_arg) {
+		AsyncCallOnMatlabThread((void*)a_owner, (TypeClbK)GetFuncPointer_common(1, a_fpClbK), a_arg);
+	}
+	void PrintFromAnyThread(const char* string);	
 
 private:
-	common::FifoFast<SLsnCallbackItem, 8>	m_fifoJobs;
+	void PrintOnMatlabThreadPrivate(void* string);	
 
 };
 

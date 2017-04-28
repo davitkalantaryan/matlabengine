@@ -69,14 +69,20 @@ matlab::engine::ServerBase::~ServerBase()
 }
 
 
-int matlab::engine::ServerBase::StartMServer(void)
+int matlab::engine::ServerBase::StartMServer(int a_nEngNumber)
 {
+	int nError;
 	if (m_nRun != 0) { return 0; }
 	m_nRun = 1;
-	m_pMatHandle->Start();
+	nError = m_pMatHandle->Start();
+	if (nError == START_RET::ENG_ERROR) { m_nRun = 0;return START_RET::ENG_ERROR;}
 	m_resourceThread = STD::thread(&matlab::engine::ServerBase::ResourceThread, this);
-    m_serverThread = STD::thread(&matlab::engine::ServerBase::ServerThread, this);
-	return 0;
+	m_nReturnFromServerThread = 0;
+	m_nServerRuns = 0;
+    m_serverThread = STD::thread(&matlab::engine::ServerBase::ServerThread, this, a_nEngNumber);
+    while ((m_nReturnFromServerThread==0)&&(m_nServerRuns==0)){Sleep(10);}
+	if (m_nReturnFromServerThread) { StopMServer(); }
+	return m_nReturnFromServerThread;
 }
 
 
@@ -102,9 +108,9 @@ int matlab::engine::ServerBase::GetRun()
 }
 
 
-void matlab::engine::ServerBase::ServerThread(void)
+void matlab::engine::ServerBase::ServerThread(int a_nEngNumber)
 {
-	/*int nRet = */StartServerPrivate();
+	StartServerPrivate(a_nEngNumber);
 }
 
 
@@ -206,22 +212,16 @@ void matlab::engine::ServerBase::ContactThread(struct SConnectionItem* a_item)
 
 	while (m_nRun && a_item->run)
 	{
-		a_item->mutexForBuffers.lock();
-		nAction=a_item->serializer.ReceiveScriptNameAndArrays(
-			&aSocket, MAXIMUM_NUMBER_OF_IN_AND_OUTS,
-			(void**)a_item->vInputs,&a_item->numOfInputs,
-			SERVER_BIG_TIMEOUT_MS);
-		a_item->mutexForBuffers.unlock();
-
+		nAction=a_item->serializer.ReceiveHeader(&aSocket, SERVER_BIG_TIMEOUT_MS);
 		switch (nAction)
 		{
+		case _SOCKET_TIMEOUT_:
+			break;
 		case ACTION_TYPE::REMOTE_CALL:
-			m_pMatHandle->CallOnMatlabThreadC(
+			m_pMatHandle->SyncCallOnMatlabThreadC(
 				this, &matlab::engine::ServerBase::CallMatlabFunction, (void*)a_item);
-			a_item->semaDone.wait();
 			break;
 		default:
-			//a_item->semaDone.wait();
 			a_item->run = 0;
 			break;
 		}
@@ -239,12 +239,12 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 	const char* cpcInfoOrError = "Error";
 	mxArray* pReturnFromCallMatlab = NULL;
 	mxArray* vOutputs[MAXIMUM_NUMBER_OF_IN_AND_OUTS];
+	mxArray* vInputs[MAXIMUM_NUMBER_OF_IN_AND_OUTS];
 	SocketForServer aSocket(pItem->senderReceiver, m_fpReceive, m_fpSend);
 	int nReturn(-1);
 	int32_ttt nInputs;
 	int32_ttt i,nOutputs(0);
 	int nIsAnsExist = 0;
-	int nFirstOutDelete = 0;
 	int32_ttt nSeriType;
 
 #ifdef WIN32
@@ -255,13 +255,13 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
     s_pCurServer = this;
 	m_pCurrentItem = pItem;
 
-	pItem->mutexForBuffers.lock();
-	nSeriType = pItem->serializer.SeriType();
-
 	if (pItem->serializer.OverAllLengthMinusHeader() <= 0) { goto returnPoint; }
 	try {
-		nInputs=pItem->numOfInputs;
-		if (nInputs< 0) { goto returnPoint; }
+		nInputs=pItem->serializer.ReceiveScriptNameAndArrays2(
+			&aSocket,10000,
+			MAXIMUM_NUMBER_OF_IN_AND_OUTS, (void**)vInputs);
+		if (nInputs < 0) {goto returnPoint;}
+		nSeriType = pItem->serializer.SeriType();
 		nOutputs = pItem->serializer.NumOfExpOutsOrError()>MAXIMUM_NUMBER_OF_IN_AND_OUTS ?
 			MAXIMUM_NUMBER_OF_IN_AND_OUTS : pItem->serializer.NumOfExpOutsOrError();
 
@@ -284,13 +284,13 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 		else
 		{
 			pReturnFromCallMatlab = m_pMatHandle->newCallMATLABWithTrap(nOutputs, vOutputs, 
-				nInputs,pItem->vInputs, pItem->serializer.MatlabScriptName3());
+				nInputs,vInputs, pItem->serializer.MatlabScriptName3());
 		}
 
 		if (((nInputs == 0) && (nOutputs<2)) || (nOutputs == 0)) // try any remaining outs
 		{
 			vOutputs[0] = m_pMatHandle->newGetVariable("base", "ans");
-			if (vOutputs[0]) { nFirstOutDelete = 1; nOutputs = 1; }
+            if (vOutputs[0]) { nOutputs = 1; }
 			else if (nIsAnsExist){ m_pMatHandle->newEvalStringWithTrap("ans=old__ans;"); }
 			if (nIsAnsExist) { m_pMatHandle->newEvalStringWithTrap("clear old__ans"); }
 		}
@@ -325,7 +325,6 @@ returnPoint:
 	pItem->serializer.SendScriptNameAndArrays(
 		&aSocket, pItem->serializer.Version(),nSeriType,
 		cpcInfoOrError, nReturn,nOutputs, (TypeConstVoidPtr*)vOutputs);
-	pItem->mutexForBuffers.unlock();
 
 	if(!pReturnFromCallMatlab){
 		for(i=0;i<nOutputs;++i){mxDestroyArray(vOutputs[i]);}
@@ -339,26 +338,25 @@ returnPoint:
 	m_pMatHandle->newEvalStringWithTrap("drawnow");
 	m_pCurrentItem = NULL;
 	s_pCurServer = NULL;
-	pItem->semaDone.post();
-
 }
 
 
 /*//////////////////////*/
 #if 0
 void*						senderReceiver;
-volatile int				run;
-matlab::engine::Serializer	serializer;
-std::mutex					mutexForBuffers;
-std::thread					serverThread;
 struct SConnectionItem*		prev;
 struct SConnectionItem*		next;
+mxArray* vInputs[MAXIMUM_NUMBER_OF_IN_AND_OUTS];
+volatile int				run;
+int32_ttt					numOfInputs;
+matlab::engine::Serializer	serializer;
+STD::thread					serverThread;
 #endif
 matlab::engine::SConnectionItem::SConnectionItem(ServerBase* a_pParent, void* a_senderReceiver)
 	:
     senderReceiver(a_senderReceiver),
+	prev(NULL), next(NULL),
 	serializer(a_pParent->m_pMatHandle),
-	prev(NULL),next(NULL),
 	serverThread(&matlab::engine::ServerBase::ContactThread, a_pParent, this)
 {
 }

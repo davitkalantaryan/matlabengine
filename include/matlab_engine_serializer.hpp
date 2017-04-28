@@ -58,12 +58,20 @@ public:
 		int32_ttt numOfArrays,
 		const void* vpArrays[]);
 
-	int	ReceiveScriptNameAndArrays(
-		common::SocketBase* socket,
+	// In the case if MATLAB routines are used for
+	// parsing call this from MATLAB context
+	int	ReceiveHeaderScriptNameAndArrays(
+		common::SocketBase* socket, long timeoutMS,
 		int32_ttt numOfArrays,
 		void* vpArrays[],
-		int32_ttt* numOfArraysOut,
-		long timeoutMS);
+		int32_ttt* numOfArraysOut);
+
+	int	ReceiveHeader(common::SocketBase* socket, long a_timeoutMS);
+
+	int32_ttt	ReceiveScriptNameAndArrays2(
+		common::SocketBase* socket, long timeoutMS,
+		int32_ttt numOfArrays,
+		void* vpArrays[]);
 
 	const char*	MatlabScriptName3()const;
 

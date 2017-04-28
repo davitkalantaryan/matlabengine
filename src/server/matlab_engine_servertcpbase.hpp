@@ -24,8 +24,11 @@ public:
 
 protected:
 	int		AddClient(class ASocketTCP& a_ClientSocket, struct sockaddr_in* bufForRemAddress) __OVERRIDE__;
-	virtual int		StartServerPrivate(void) __OVERRIDE__;
+	virtual void	StartServerPrivate(int engNumber) __OVERRIDE__;
 	virtual void	StopServerPrivate(void) __OVERRIDE__;
+
+protected:
+	struct sockaddr_in	m_bufForRemAddress;
 };
 
 }}

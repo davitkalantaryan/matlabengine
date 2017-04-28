@@ -27,7 +27,8 @@
 matlab::engine::MatHandleEng::MatHandleEng()
     :
       m_pEngine(NULL),
-      m_nRun(0)
+      m_nRun(0),
+      m_fifoJobs(8)
 {
     //
 }
@@ -39,18 +40,13 @@ matlab::engine::MatHandleEng::~MatHandleEng()
 }
 
 
-void matlab::engine::MatHandleEng::Start()
+int matlab::engine::MatHandleEng::Start()
 {
-    if(m_nRun == 1){return;}
+    if(m_nRun == 1){return START_RET::ALREADY_RUN;}
     m_threadMat = STD::thread(&MatHandleEng::MatlabThreadFunction,this);
     m_nReturn = 0;
-    while((m_pEngine==NULL)&&(m_nReturn==0)){
-#ifdef WIN32
-        Sleep(10);
-#else
-        usleep(10000);
-#endif
-    }
+    while((m_pEngine==NULL)&&(m_nReturn==0)){Sleep(10);}
+    return m_nReturn;
 }
 
 
@@ -144,15 +140,17 @@ mxArray* matlab::engine::MatHandleEng::newCallMATLABWithTrap(
 
 void matlab::engine::MatHandleEng::MatlabThreadFunction()
 {
-    //bool bEngVisible=false;
     if(m_pEngine){return;}
+
+    m_nRun = 0;
     //m_pEngine = engOpen("init_root_and_call matlab_R2016a");
     //m_pEngine = engOpen(NULL);
     //m_pEngine = engOpen("matlab -nodesktop");
     m_pEngine = engOpen("/usr/local/bin/matlab_R2016a");
     //printf("engine=%p\n",m_pEngine);
-    if(!m_pEngine){m_nReturn=-1;return;}
+    if(!m_pEngine){m_nReturn=START_RET::ENG_ERROR;return;}
     m_nRun=1;
+    m_nReturn=START_RET::STARTED;
 
     //if(m_pEngine) {engGetVisible(m_pEngine,&bEngVisible) ;}
     //printf("nVisible=%d\n",(int)bEngVisible);
@@ -169,10 +167,43 @@ void matlab::engine::MatHandleEng::MatlabThreadFunction()
 }
 
 
-void matlab::engine::MatHandleEng::CallOnMatlabThread(void* a_owner, TypeClbK a_fpClb, void* a_arg)
+void matlab::engine::MatHandleEng::SyncCallOnMatlabThread(void* a_owner, TypeClbK a_fpClb, void* a_arg)
 {
     if(m_pEngine){
-        AddMatlabJob(a_owner,a_fpClb,a_arg);
+        SLsnCallbackItem newItem;
+        newItem.owner = a_owner;
+        newItem.clbk = a_fpClb;
+        newItem.arg = a_arg;
+        newItem.isSync = 1;
+        m_fifoJobs.AddElement(newItem);
+        m_semaMat.post();
+        newItem.sema.wait();
+    }
+}
+
+
+void matlab::engine::MatHandleEng::AsyncCallOnMatlabThread(
+        void* a_owner, TypeClbK a_fpClb, void* a_arg)
+{
+    if(m_pEngine){
+        SLsnCallbackItem newItem;
+        newItem.owner = a_owner;
+        newItem.clbk = a_fpClb;
+        newItem.arg = a_arg;
+        newItem.isSync = 0;
+        m_fifoJobs.AddElement(newItem);
         m_semaMat.post();
     }
+}
+
+void matlab::engine::MatHandleEng::HandleAllJobs(void)
+{
+    SLsnCallbackItem	clbkItem;
+
+    while (m_fifoJobs.Extract(&clbkItem))
+    {
+        (*clbkItem.clbk)(clbkItem.owner, clbkItem.arg);
+        if(clbkItem.isSync){clbkItem.sema.post();}
+    }
+
 }

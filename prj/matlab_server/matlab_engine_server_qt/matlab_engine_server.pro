@@ -30,7 +30,8 @@ SOURCES += ../../../src/common/asockettcp.cpp \
     ../../../src/util/matlab_engine_mathandleeng.cpp \
     ../../../src/server/matlab_engine_servertcpeng.cpp \
     ../../../src/common/common_serializer.cpp \
-    ../../../src/common/common_socketbase.cpp
+    ../../../src/common/common_socketbase.cpp \
+    ../../../src/common/common_argument_parser.cpp
 HEADERS += ../../../src/client/matlab_engine_clienttcp.hpp \
     ../../../include/matlab_pipe_name.h \
     ../../../include/matlab_engine_serializer.hpp \
@@ -49,4 +50,6 @@ HEADERS += ../../../src/client/matlab_engine_clienttcp.hpp \
     ../../../src/server/matlab_engine_servertcpeng.hpp \
     ../../../include/common_unnamedsemaphorelite.hpp \
     ../../../include/common_serializer.hpp \
-    ../../../include/common_socketbase.hpp
+    ../../../include/common_socketbase.hpp \
+    ../../../include/common_argument_parser.hpp \
+    ../../../include/common_argument_parser.tos

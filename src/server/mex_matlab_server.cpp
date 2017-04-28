@@ -66,8 +66,18 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 		});
 	} // if (!snAtExitRegistered)
 
-	if (!s_serverTcp.GetRun()){s_serverTcp.StartMServer();}
-
+	if (!s_serverTcp.GetRun()){
+		if((a_nNumInps<1) || (!mxIsDouble(a_Inputs[0]))){
+			a_Outputs[0] = mxCreateString("Error during processing mex file!");
+			return;
+		}
+		double* plfEngNumber = mxGetPr(a_Inputs[0]);
+		if (s_serverTcp.StartMServer((int)(*plfEngNumber)))
+		{
+			mexPrintf("Unable to start MATLAB server!\n");
+			return;
+		}
+	}
 
 	if (nError){a_Outputs[0] = mxCreateString("Error during processing mex file!");}
 	else 

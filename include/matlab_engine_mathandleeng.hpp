@@ -20,6 +20,10 @@
 
 namespace matlab{ namespace engine{
 
+struct SLsnCallbackItem {
+    void*owner; TypeClbK clbk; void*arg;
+    common::UnnamedSemaphoreLite sema; int isSync;
+};
 
 class MatHandleEng : public MatHandleBase
 {
@@ -27,7 +31,7 @@ public:
     MatHandleEng();
     virtual ~MatHandleEng();
 
-    virtual void Start() __OVERRIDE__ ;
+    virtual int Start() __OVERRIDE__ ;
     virtual void Stop() __OVERRIDE__;
 
 	mxArray* newGetVariable(const char* workspace, const char* name) __OVERRIDE__;
@@ -40,10 +44,12 @@ public:
 		mxArray     *prhs[],    /* pointer array to inputs */
 		const char  *fcn_name   /* name of function to execute */
 	) __OVERRIDE__;
-    virtual void CallOnMatlabThread(void* owner, TypeClbK fpClb, void*arg)__OVERRIDE__;
+    virtual void SyncCallOnMatlabThread(void* owner, TypeClbK fpClb, void*arg)__OVERRIDE__;
+    virtual void AsyncCallOnMatlabThread(void* owner, TypeClbK fpClb, void*arg)__OVERRIDE__;
 
 private:
     void MatlabThreadFunction();
+    void HandleAllJobs(void);
 
 private:
     Engine*                         m_pEngine;
@@ -51,6 +57,7 @@ private:
     common::UnnamedSemaphoreLite    m_semaMat;
     volatile int                    m_nRun;
     volatile int                    m_nReturn;
+    common::FifoFast<SLsnCallbackItem, 8>	m_fifoJobs;
 };
 
 }}

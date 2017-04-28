@@ -39,35 +39,33 @@ int matlab::engine::ServerTcpBase::AddClient(class ASocketTCP& a_ClientSocket, s
 }
 
 
-int matlab::engine::ServerTcpBase::StartServerPrivate(void)
+void matlab::engine::ServerTcpBase::StartServerPrivate(int a_nEngNumber)
 {
 	char vcBuffer[64];
-	int nTry,nRet(-1);
+	int nPort(GenerateMatlabServerPortNumber(0,0));
 	
 	ASocketB::Initialize();
 	gethostname(vcBuffer, 63);
-
-	// If everything is ok, then AServerTCP::StartServer will not return
 	
-	snprintf(vcBuffer, 63, "%s:%d\\n",vcBuffer,0);
+	snprintf(vcBuffer, 63, "%s:%d\\n",vcBuffer, a_nEngNumber);
 	m_pMatHandle->PrintFromAnyThread(vcBuffer);
-	for (nTry = 0;
-		ServerBase::m_nRun && (nTry < MAX_TRY_NUMBERS) &&
-		(nRet = AServerTCP::StartServer(GenerateMatlabServerPortNumber(0, nTry), 1000));
-		++nTry);
 
-	if (ServerBase::m_nRun){
-		snprintf(vcBuffer, 63, "%s:%d\\n", vcBuffer, (int)getpid());
-		m_pMatHandle->PrintFromAnyThread(vcBuffer);
+#ifdef _CD_VERSION__
+	m_nReturnFromServerThread = AServerTCP::CreateServer(a_nPort, true);
+#else
+	m_nReturnFromServerThread = AServerTCP::CreateServer(nPort);
+#endif
+
+	if (m_nReturnFromServerThread != 0){
+		AServerTCP::Close();
+		return;
 	}
-	for (nTry = 0;
-		ServerBase::m_nRun && (nTry < MAX_TRY_NUMBERS) &&
-		(nRet = AServerTCP::StartServer(GenerateMatlabServerPortNumber(getpid(), nTry), 1000));
-		++nTry);
+	
+	m_nServerRuns = 1;
+	AServerTCP::RunServer(1000, &m_bufForRemAddress);
+	m_nServerRuns = 0;
 
 	ASocketB::Cleanup();
-
-	return (nTry < (MAX_TRY_NUMBERS - 1)) ? 0 : -1;
 }
 
 

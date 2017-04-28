@@ -12,8 +12,6 @@
 #include <memory.h>
 
 matlab::engine::MatHandleBase::MatHandleBase()
-	:
-	m_fifoJobs(8)
 {
 }
 
@@ -43,7 +41,7 @@ int matlab::engine::MatHandleBase::newFrprint(int a_out, const char* a_fmt, ...)
 void matlab::engine::MatHandleBase::PrintFromAnyThread(const char* a_cpcString)
 {
 	void* pString = (void*)a_cpcString;
-	this->CallOnMatlabThreadC(this, &MatHandleBase::PrintOnMatlabThreadPrivate, pString);
+	this->AsyncCallOnMatlabThreadC(this, &MatHandleBase::PrintOnMatlabThreadPrivate, pString);
 }
 
 
@@ -51,28 +49,6 @@ void matlab::engine::MatHandleBase::PrintOnMatlabThreadPrivate(void* a_string)
 {
 	const char* cpcString = (const char*)a_string;
 	this->newFrprint(STDPIPES::STDOUT, cpcString);
-}
-
-
-void matlab::engine::MatHandleBase::AddMatlabJob(void* a_owner, TypeClbK a_fpClb, void* a_arg)
-{
-	SLsnCallbackItem newItem;
-	newItem.owner = a_owner;
-	newItem.clbk = a_fpClb;
-	newItem.arg = a_arg;
-	m_fifoJobs.AddElement(newItem);
-}
-
-
-void matlab::engine::MatHandleBase::HandleAllJobs(void)
-{
-	SLsnCallbackItem	clbkItem;
-
-	while (m_fifoJobs.Extract(&clbkItem))
-	{
-		(*clbkItem.clbk)(clbkItem.owner, clbkItem.arg);
-	}
-
 }
 
 
