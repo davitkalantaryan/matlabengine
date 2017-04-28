@@ -57,7 +57,7 @@ private:
     common::UnnamedSemaphoreLite    m_semaMat;
     volatile int                    m_nRun;
     volatile int                    m_nReturn;
-    common::FifoFast<SLsnCallbackItem, 8>	m_fifoJobs;
+    common::FifoFast<SLsnCallbackItem*, 8>	m_fifoJobs;
 };
 
 }}

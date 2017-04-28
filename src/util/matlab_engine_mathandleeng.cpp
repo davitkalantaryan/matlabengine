@@ -175,7 +175,7 @@ void matlab::engine::MatHandleEng::SyncCallOnMatlabThread(void* a_owner, TypeClb
         newItem.clbk = a_fpClb;
         newItem.arg = a_arg;
         newItem.isSync = 1;
-        m_fifoJobs.AddElement(newItem);
+        m_fifoJobs.AddElement(&newItem);
         m_semaMat.post();
         newItem.sema.wait();
     }
@@ -186,24 +186,25 @@ void matlab::engine::MatHandleEng::AsyncCallOnMatlabThread(
         void* a_owner, TypeClbK a_fpClb, void* a_arg)
 {
     if(m_pEngine){
-        SLsnCallbackItem newItem;
-        newItem.owner = a_owner;
-        newItem.clbk = a_fpClb;
-        newItem.arg = a_arg;
-        newItem.isSync = 0;
-        m_fifoJobs.AddElement(newItem);
+        SLsnCallbackItem* pNewItem = new SLsnCallbackItem;
+        pNewItem->owner = a_owner;
+        pNewItem->clbk = a_fpClb;
+        pNewItem->arg = a_arg;
+        pNewItem->isSync = 0;
+        m_fifoJobs.AddElement(pNewItem);
         m_semaMat.post();
     }
 }
 
 void matlab::engine::MatHandleEng::HandleAllJobs(void)
 {
-    SLsnCallbackItem	clbkItem;
+    SLsnCallbackItem*	pClbkItem;
 
-    while (m_fifoJobs.Extract(&clbkItem))
+    while (m_fifoJobs.Extract(&pClbkItem))
     {
-        (*clbkItem.clbk)(clbkItem.owner, clbkItem.arg);
-        if(clbkItem.isSync){clbkItem.sema.post();}
+        (*pClbkItem->clbk)(pClbkItem->owner, pClbkItem->arg);
+        if(pClbkItem->isSync){pClbkItem->sema.post();}
+        else {delete pClbkItem;}
     }
 
 }
