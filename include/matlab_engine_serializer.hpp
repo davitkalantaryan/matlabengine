@@ -32,6 +32,7 @@
 #include "common_serializer.hpp"
 #include "common_socketbase.hpp"
 #include "matlab_engine_mathandlebase.hpp"
+#include "matlab_engine_serializer_versioning.hpp"
 
 // https://de.mathworks.com/help/matlab/apiref/mexcallmatlab.html
 #ifndef MAXIMUM_NUMBER_OF_IN_AND_OUTS
@@ -40,38 +41,33 @@
 
 namespace matlab{ namespace engine{
 
-struct SERI_TYPE { enum { MAT_UNDOCU = 0, RAW1 }; };
 struct ACTION_TYPE { enum { REMOTE_CALL = 0, NNN }; };
 
 class Serializer : public common::Serializer
 {
 public:
-	Serializer(MatHandleBase* matHandle);
+	Serializer(MatHandleBase* matHandle,int32_ttt version, int32_ttt seriType);
 	virtual ~Serializer();
 
 	int	SendScriptNameAndArrays(
+		versioning::FncPointers* fncs,
 		common::SocketBase* socket,
-		int32_ttt version,
-		int32_ttt typeOfSeri,
 		const char* scriptName,
 		int32_ttt numOfOutsOrError,
 		int32_ttt numOfArrays,
 		const void* vpArrays[]);
 
-	// In the case if MATLAB routines are used for
-	// parsing call this from MATLAB context
-	int	ReceiveHeaderScriptNameAndArrays(
-		common::SocketBase* socket, long timeoutMS,
-		int32_ttt numOfArrays,
-		void* vpArrays[],
-		int32_ttt* numOfArraysOut);
-
 	int	ReceiveHeader(common::SocketBase* socket, long a_timeoutMS);
 
 	int32_ttt	ReceiveScriptNameAndArrays2(
+		versioning::FncPointers* fncs,
 		common::SocketBase* socket, long timeoutMS,
-		int32_ttt numOfArrays,
-		void* vpArrays[]);
+		int32_ttt numOfArraysIn,void* vpArrays[]);
+
+	int ReceiveHeaderScriptNameAndArrays2(
+		versioning::FncPointers* fncs,
+		common::SocketBase* socket, long timeoutMS,
+		int32_ttt numOfArraysIn,void* vpArrays[], int32_ttt* pNumOfArraysOut);
 
 	const char*	MatlabScriptName3()const;
 

@@ -29,8 +29,7 @@
 #ifndef __common_serializer_hpp__
 #define __common_serializer_hpp__
 
-#define	SERIALIZER_VERSION		4
-#define	COMMON_SERI_HEADER_LEN	24
+#define	COMMON_SERI_HEADER_LEN			64
 
 #include <stddef.h>
 
@@ -50,7 +49,7 @@ class Serializer
 protected:
 	struct OFFSET{enum{VERSION=0,TYPE=4,NUM_AFTER_HEADER=8,NUM_OUTS=12,BYTE_LENGTH=16,RESERVED=20};};
 public:
-	Serializer();
+	Serializer(int32_ttt a_version);
 	virtual ~Serializer();
 
 	int32_ttt OverAllLengthMinusHeader()const;
@@ -61,17 +60,16 @@ protected:
 	int			Resize(int32_ttt newOverAllMinusHeader);
 
 protected:
-	int32_ttt	m_nBufferMaxSize3;
-	int32_ttt	m_nReserved3;
-	u_char_ttt*	m_pWholeBuffer3;
+	int32_ttt	m_nBufferMaxSize;
+	int32_ttt	m_nReserved;
+	u_char_ttt*	m_pWholeBuffer;
 
 protected:
-	int32_ttt*	m_pnVersion3;
-	int32_ttt*	m_pnTypeOfSerialization3;
-	int32_ttt*	m_pnAllMinusHeaderLength3;
-	int32_ttt*	m_pnNumOfExpOutsOrError3;
-	int32_ttt*	m_pnMatlabByteStreamLength3;
-	int32_ttt*	m_pnReserved3;
+	int32_ttt*	m_pnVersion;
+	int32_ttt*	m_pnTypeOfSerialization;
+	int32_ttt*	m_pnAllMinusHeaderLength;
+	int32_ttt*	m_pnNumOfExpOutsOrError;
+	int32_ttt*	m_pnArgumentByteStreamLength;
 };
 
 }

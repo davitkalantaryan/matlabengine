@@ -25,60 +25,56 @@
 
  //#pragma warning(disable : 4996)
 
-common::Serializer::Serializer()
+common::Serializer::Serializer(int32_ttt a_version)
 	:
-	m_nBufferMaxSize3(0),
-	m_nReserved3(0)
+	m_nBufferMaxSize(0),
+	m_nReserved(0)
 {
-	m_pWholeBuffer3 = (u_char_ttt*)malloc(COMMON_SERI_HEADER_LEN);
-	if (!m_pWholeBuffer3){throw "Low memory";}
+	m_pWholeBuffer = (u_char_ttt*)malloc(COMMON_SERI_HEADER_LEN);
+	if (!m_pWholeBuffer){throw "Low memory";}
 
-	m_nBufferMaxSize3 = COMMON_SERI_HEADER_LEN;
+	m_nBufferMaxSize = COMMON_SERI_HEADER_LEN;
 
-	m_pnVersion3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::VERSION)));
-	m_pnTypeOfSerialization3 = ((int32_ttt*)((void*)(m_pWholeBuffer3+ OFFSET::TYPE)));
-	m_pnAllMinusHeaderLength3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::NUM_AFTER_HEADER)));
-	m_pnNumOfExpOutsOrError3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::NUM_OUTS)));
-	m_pnMatlabByteStreamLength3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::BYTE_LENGTH)));
-	m_pnReserved3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::RESERVED)));
+	m_pnVersion = ((int32_ttt*)((void*)(m_pWholeBuffer + OFFSET::VERSION)));
+	m_pnTypeOfSerialization = ((int32_ttt*)((void*)(m_pWholeBuffer+ OFFSET::TYPE)));
+	m_pnAllMinusHeaderLength = ((int32_ttt*)((void*)(m_pWholeBuffer + OFFSET::NUM_AFTER_HEADER)));
+	m_pnNumOfExpOutsOrError = ((int32_ttt*)((void*)(m_pWholeBuffer + OFFSET::NUM_OUTS)));
+	m_pnArgumentByteStreamLength = ((int32_ttt*)((void*)(m_pWholeBuffer + OFFSET::BYTE_LENGTH)));
 
-
-	*m_pnVersion3 = SERIALIZER_VERSION;
-	*m_pnTypeOfSerialization3 = 0;
-	*m_pnAllMinusHeaderLength3 = 0;
-	*m_pnNumOfExpOutsOrError3 = 0;
-	*m_pnMatlabByteStreamLength3 = 0;
-	*m_pnReserved3 = 0;
+	*m_pnVersion = a_version;
+	*m_pnTypeOfSerialization = 0;
+	*m_pnAllMinusHeaderLength = 0;
+	*m_pnNumOfExpOutsOrError = 0;
+	*m_pnArgumentByteStreamLength = 0;
 	
 }
 
 
 common::Serializer::~Serializer()
 {
-	free(m_pWholeBuffer3);
+	free(m_pWholeBuffer);
 }
 
 
 int common::Serializer::Resize(int32_ttt a_nNewOverAllMinusHeader)
 {
 	int nNewBufferSize = a_nNewOverAllMinusHeader + COMMON_SERI_HEADER_LEN;
-	if (nNewBufferSize > m_nBufferMaxSize3)
+	if (nNewBufferSize > m_nBufferMaxSize)
 	{
-		u_char_ttt* pTempBuffer = (u_char_ttt*)realloc(m_pWholeBuffer3, nNewBufferSize);
+		u_char_ttt* pTempBuffer = (u_char_ttt*)realloc(m_pWholeBuffer, nNewBufferSize);
 		if (!pTempBuffer)
 		{
 			// handle this case
 			return -1;
 		}
-		m_pWholeBuffer3 = pTempBuffer;
-		m_nBufferMaxSize3 = nNewBufferSize;
+		m_pWholeBuffer = pTempBuffer;
+		m_nBufferMaxSize = nNewBufferSize;
 		
-		m_pnVersion3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::VERSION)));
-		m_pnTypeOfSerialization3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::TYPE)));
-		m_pnAllMinusHeaderLength3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::NUM_AFTER_HEADER)));
-		m_pnNumOfExpOutsOrError3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::NUM_OUTS)));
-		m_pnMatlabByteStreamLength3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::BYTE_LENGTH)));
-		m_pnReserved3 = ((int32_ttt*)((void*)(m_pWholeBuffer3 + OFFSET::RESERVED)));
+		m_pnVersion = ((int32_ttt*)((void*)(m_pWholeBuffer + OFFSET::VERSION)));
+		m_pnTypeOfSerialization = ((int32_ttt*)((void*)(m_pWholeBuffer + OFFSET::TYPE)));
+		m_pnAllMinusHeaderLength = ((int32_ttt*)((void*)(m_pWholeBuffer + OFFSET::NUM_AFTER_HEADER)));
+		m_pnNumOfExpOutsOrError = ((int32_ttt*)((void*)(m_pWholeBuffer + OFFSET::NUM_OUTS)));
+		m_pnArgumentByteStreamLength = ((int32_ttt*)((void*)(m_pWholeBuffer + OFFSET::BYTE_LENGTH)));
 	}
 
 	return 0;
@@ -87,17 +83,17 @@ int common::Serializer::Resize(int32_ttt a_nNewOverAllMinusHeader)
 
 int32_ttt common::Serializer::SeriType()const
 {
-	return *m_pnTypeOfSerialization3;
+	return *m_pnTypeOfSerialization;
 }
 
 
 int32_ttt common::Serializer::Version()const
 {
-	return *m_pnVersion3;
+	return *m_pnVersion;
 }
 
 
 int32_ttt common::Serializer::OverAllLengthMinusHeader()const
 {
-	return *m_pnAllMinusHeaderLength3;
+	return *m_pnAllMinusHeaderLength;
 }

@@ -12,6 +12,9 @@
 #ifndef COMMON_DEFINATION_H
 #define COMMON_DEFINATION_H
 
+#define	CURRENT_SERIALIZER_VERSION2		5
+#define	CURRENT_SERIALIZER_TYPE2		1
+
 #ifndef __THISCALL__
 #ifdef _MSC_VER
 #define __THISCALL__ __thiscall

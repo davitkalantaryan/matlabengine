@@ -102,6 +102,7 @@ struct SConnectionItem{
 	struct SConnectionItem*		next;
 	volatile int				run;
 	matlab::engine::Serializer	serializer;
+	versioning::FncPointers		vFuncs;
 	STD::thread					serverThread;
 };
 

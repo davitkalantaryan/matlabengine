@@ -258,6 +258,7 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 	if (pItem->serializer.OverAllLengthMinusHeader() <= 0) { goto returnPoint; }
 	try {
 		nInputs=pItem->serializer.ReceiveScriptNameAndArrays2(
+			&pItem->vFuncs,
 			&aSocket,10000,
 			MAXIMUM_NUMBER_OF_IN_AND_OUTS, (void**)vInputs);
 		if (nInputs < 0) {goto returnPoint;}
@@ -323,8 +324,8 @@ returnPoint:
 	sigaction(SIGPIPE, &sigAction, &sigActionOld);
 #endif  // #ifdef WIN32
 	pItem->serializer.SendScriptNameAndArrays(
-		&aSocket, pItem->serializer.Version(),nSeriType,
-		cpcInfoOrError, nReturn,nOutputs, (TypeConstVoidPtr*)vOutputs);
+		&pItem->vFuncs,&aSocket,cpcInfoOrError, 
+		nReturn,nOutputs, (TypeConstVoidPtr*)vOutputs);
 
 	if(!pReturnFromCallMatlab){
 		for(i=0;i<nOutputs;++i){mxDestroyArray(vOutputs[i]);}
@@ -356,7 +357,7 @@ matlab::engine::SConnectionItem::SConnectionItem(ServerBase* a_pParent, void* a_
 	:
     senderReceiver(a_senderReceiver),
 	prev(NULL), next(NULL),
-	serializer(a_pParent->m_pMatHandle),
+	serializer(a_pParent->m_pMatHandle,CURRENT_SERIALIZER_VERSION2,CURRENT_SERIALIZER_TYPE2),
 	serverThread(&matlab::engine::ServerBase::ContactThread, a_pParent, this)
 {
 }

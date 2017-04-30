@@ -20,6 +20,8 @@
 #include <matlab_bytestream_routines.h>
 #include <map>
 
+#define _MAT_UNDOCU matlab::engine::versioning::SERI_TYPE::MAT_UNDOCU
+
 static void PrintHelp();
 static void CleanMexFile(void);
 
@@ -34,10 +36,11 @@ struct SConnectItem {
 
 static matlab::engine::MatHandleMexBase		s_matHandle;
 static int									s_nInited = 0;
-static matlab::engine::Serializer			s_serializeDes(&s_matHandle);
+static matlab::engine::Serializer			s_serializeDes(&s_matHandle,CURRENT_SERIALIZER_VERSION2,_MAT_UNDOCU);
 static SConnectItem*						s_pCurrentConnect=NULL;
 static int									s_nDebug = 0;
 static std::map<std::string,SConnectItem*>	s_mpConnections;
+static matlab::engine::versioning::FncPointers s_vFuncs;
 
 typedef const void* TypeConstVoidPtr;
 
@@ -45,7 +48,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	int a_nNumInps, const mxArray*a_Inputs[])
 {
     int i,nReceived,nAdrStrLenPlus15;
-	int32_ttt nOutputs,nSeriType = matlab::engine::SERI_TYPE::MAT_UNDOCU;
+	int32_ttt nOutputs;
 
 	if (!s_nInited) {
 		ASocketB::Initialize();
@@ -146,7 +149,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	s_pCurrentConnect->isHandled = false;
 
 	nReceived=s_serializeDes.SendScriptNameAndArrays(
-		&s_pCurrentConnect->socketTcp,SERIALIZER_VERSION,nSeriType,
+		&s_vFuncs,&s_pCurrentConnect->socketTcp,
 		pcScriptName,a_nNumOuts,a_nNumInps-2,(TypeConstVoidPtr*)(a_Inputs+2));
 
 	if(nReceived<0){goto cleanCurrentConn;}
@@ -160,9 +163,9 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	// receive answer
 recieveResult:
 	a_nNumOuts = a_nNumOuts < 1 ? 1 : a_nNumOuts;
-	nReceived=s_serializeDes.ReceiveScriptNameAndArrays(
-		&s_pCurrentConnect->socketTcp,
-		a_nNumOuts,(void**)a_Outputs, &nOutputs,s_pCurrentConnect->timeoutMS);
+	nReceived=s_serializeDes.ReceiveHeaderScriptNameAndArrays2(
+		&s_vFuncs,&s_pCurrentConnect->socketTcp, s_pCurrentConnect->timeoutMS,
+		a_nNumOuts,(void**)a_Outputs, &nOutputs);
 
 	if (nReceived == _SOCKET_TIMEOUT_){goto returnWithTimeout;}
 	else if (nReceived < 0){goto cleanCurrentConn;}

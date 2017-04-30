@@ -256,10 +256,12 @@
     <ClCompile Include="..\..\..\src\common\common_functionalities.cpp" />
     <ClCompile Include="..\..\..\src\common\common_serializer.cpp" />
     <ClCompile Include="..\..\..\src\common\common_socketbase.cpp" />
+    <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_matundoc.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_bytestream_routines.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlebase.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlemexbase.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_serializer.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_serializer_versioning.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_pipe_name.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -272,6 +274,7 @@
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlebase.hpp" />
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlemexbase.hpp" />
     <ClInclude Include="..\..\..\include\matlab_engine_serializer.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_engine_serializer_versioning.hpp" />
     <ClInclude Include="..\..\..\src\client\matlab_engine_clienttcp.hpp" />
   </ItemGroup>
   <ItemGroup>

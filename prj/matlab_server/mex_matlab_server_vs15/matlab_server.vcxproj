@@ -258,21 +258,32 @@
     <ClCompile Include="..\..\..\src\common\listener_on_gui_thread_win.cpp" />
     <ClCompile Include="..\..\..\src\common\namedpipebase.cpp" />
     <ClCompile Include="..\..\..\src\common\namedpipeserver.cpp" />
+    <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_matundoc.cpp" />
     <ClCompile Include="..\..\..\src\server\matlab_engine_serverbase.cpp" />
     <ClCompile Include="..\..\..\src\server\matlab_engine_servertcpbase.cpp" />
     <ClCompile Include="..\..\..\src\server\matlab_engine_servertcpmex.cpp" />
     <ClCompile Include="..\..\..\src\server\mex_matlab_server.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_bytestream_routines.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlebase.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_mathandleeng.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlemex.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlemexbase.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_serializer.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_serializer_versioning.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_pipe_name.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\aservertcp.h" />
     <ClInclude Include="..\..\..\include\asocketb.h" />
     <ClInclude Include="..\..\..\include\asockettcp.h" />
+    <ClInclude Include="..\..\..\include\common_defination.h" />
     <ClInclude Include="..\..\..\include\common_fifofast.hpp" />
     <ClInclude Include="..\..\..\include\common_serializer.hpp" />
     <ClInclude Include="..\..\..\include\common_socketbase.hpp" />
@@ -280,9 +291,18 @@
     <ClInclude Include="..\..\..\include\listener_on_gui_thread.hpp" />
     <ClInclude Include="..\..\..\include\matlab_bytestream_routines.h" />
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlebase.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_engine_mathandleeng.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlemex.hpp" />
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlemexbase.hpp" />
     <ClInclude Include="..\..\..\include\matlab_engine_serializer.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_engine_serializer_versioning.hpp" />
     <ClInclude Include="..\..\..\include\matlab_pipe_name.h" />
     <ClInclude Include="..\..\..\include\namedpipebase.h" />
     <ClInclude Include="..\..\..\include\namedpipeserver.h" />
