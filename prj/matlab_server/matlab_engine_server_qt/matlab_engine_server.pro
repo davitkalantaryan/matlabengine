@@ -31,7 +31,9 @@ SOURCES += ../../../src/common/asockettcp.cpp \
     ../../../src/server/matlab_engine_servertcpeng.cpp \
     ../../../src/common/common_serializer.cpp \
     ../../../src/common/common_socketbase.cpp \
-    ../../../src/common/common_argument_parser.cpp
+    ../../../src/common/common_argument_parser.cpp \
+    ../../../src/util/matlab_engine_serializer_versioning.cpp \
+    ../../../src/seri_versions/matlab_engine_serializer_version5_matundoc.cpp
 HEADERS += ../../../src/client/matlab_engine_clienttcp.hpp \
     ../../../include/matlab_pipe_name.h \
     ../../../include/matlab_engine_serializer.hpp \
@@ -52,4 +54,5 @@ HEADERS += ../../../src/client/matlab_engine_clienttcp.hpp \
     ../../../include/common_serializer.hpp \
     ../../../include/common_socketbase.hpp \
     ../../../include/common_argument_parser.hpp \
-    ../../../include/common_argument_parser.tos
+    ../../../include/common_argument_parser.tos \
+    ../../../include/matlab_engine_serializer_versioning.hpp

@@ -12,6 +12,7 @@
 
 #include "matlab_engine_serializer_versioning.hpp"
 #include "matlab_engine_mathandlebase.hpp"
+#include <memory.h>
 
 static int32_ttt SerializeToResourseCurrent(
 	void* matEng,
