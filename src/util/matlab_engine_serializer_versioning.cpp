@@ -51,7 +51,10 @@ TypeSerializeToResourse	FindSeriToRes(int32_ttt a_version, int32_ttt a_type, Fnc
 {
 	uint64_ttt ullnFncIndex(DBL_INTS_TO_LONG(a_version,a_type));
 
-	if (ullnFncIndex != a_pFuncs->fncIndex) { memset(a_pFuncs, 0, sizeof(FncPointers)); }
+	if (ullnFncIndex != a_pFuncs->fncIndex) { 
+		memset(a_pFuncs, 0, sizeof(FncPointers));
+		a_pFuncs->fncIndex = ullnFncIndex;
+	}
 	if (!a_pFuncs->fpSeriToRs) {
 		FncPointers aNewFncs;
 
@@ -73,7 +76,10 @@ TypeSeResToBtStream	FindSeResToBtStream(int32_ttt a_version, int32_ttt a_type, F
 {
 	uint64_ttt ullnFncIndex(DBL_INTS_TO_LONG(a_version, a_type));
 
-	if (ullnFncIndex != a_pFuncs->fncIndex) { memset(a_pFuncs, 0, sizeof(FncPointers)); }
+	if (ullnFncIndex != a_pFuncs->fncIndex) { 
+		memset(a_pFuncs, 0, sizeof(FncPointers)); 
+		a_pFuncs->fncIndex = ullnFncIndex;
+	}
 	if (!a_pFuncs->fpSeRsToBtStr) {
 		FncPointers aNewFncs;
 
@@ -95,7 +101,10 @@ TypeDeSeriToResourse FindDeSeriToRes(int32_ttt a_version, int32_ttt a_type, FncP
 {
 	uint64_ttt ullnFncIndex(DBL_INTS_TO_LONG(a_version, a_type));
 
-	if (ullnFncIndex != a_pFuncs->fncIndex) { memset(a_pFuncs, 0, sizeof(FncPointers)); }
+	if (ullnFncIndex != a_pFuncs->fncIndex) { 
+		memset(a_pFuncs, 0, sizeof(FncPointers)); 
+		a_pFuncs->fncIndex = ullnFncIndex;
+	}
 	if (!a_pFuncs->fpDeseriToRs) {
 		FncPointers aNewFncs;
 
@@ -117,7 +126,10 @@ TypeDeseResToArgs FindDeseRsToArgs(int32_ttt a_version, int32_ttt a_type, FncPoi
 {
 	uint64_ttt ullnFncIndex(DBL_INTS_TO_LONG(a_version, a_type));
 
-	if (ullnFncIndex != a_pFuncs->fncIndex) { memset(a_pFuncs, 0, sizeof(FncPointers)); }
+	if (ullnFncIndex != a_pFuncs->fncIndex) { 
+		memset(a_pFuncs, 0, sizeof(FncPointers)); 
+		a_pFuncs->fncIndex = ullnFncIndex;
+	}
 	if (!a_pFuncs->fpDeseRsToArgs) {
 		FncPointers aNewFncs;
 
