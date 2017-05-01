@@ -46,15 +46,17 @@ LINKAGE_SRC AServerTCP::AServerTCP()
 
 
 
-LINKAGE_SRC int AServerTCP::StartServer(int a_nPort, long int a_lnTimeout, struct sockaddr_in* a_bufForRemAddress)
+LINKAGE_SRC int AServerTCP::StartServer(
+	int a_nPort, long int a_lnTimeout,bool a_bReuse,
+	struct sockaddr_in* a_bufForRemAddress)
 {
 
 	int nError;
 
 #ifdef _CD_VERSION__
-	nError = CreateServer( a_nPort, true );
+	nError = CreateServer( a_nPort, a_bReuse,true );
 #else
-	nError = CreateServer( a_nPort ) ;
+	nError = CreateServer( a_nPort,a_bReuse ) ;
 #endif
 
 	if( nError != 0 )
@@ -239,16 +241,19 @@ LINKAGE_SRC int AServerTCP::ServerAccept(int& a_nClientSocket, long int a_lnTime
 
 
 
-LINKAGE_SRC int AServerTCP::CreateServer(int a_nPort, bool a_bLoopback)
+LINKAGE_SRC int AServerTCP::CreateServer(int a_nPort, bool a_bReuse,bool a_bLoopback)
 {
 	char l_host[MAX_HOSTNAME_LENGTH];
 	int rtn = -1;
 
 	ASocketB::Close();
 
-	int i = 1;
     m_socket = (int)socket( AF_INET, SOCK_STREAM, 0 );
-    setsockopt( m_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&i, sizeof(i) );
+	if (m_socket < 0) { return m_socket; }
+	if(a_bReuse){
+		int i = 1;
+		setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&i, sizeof(i));
+	}
 
 #ifdef	WIN32
 	if( m_socket == INVALID_SOCKET)

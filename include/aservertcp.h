@@ -13,7 +13,8 @@ public:
 
 	LINKAGE_HDR virtual ~AServerTCP(){}
 
-	LINKAGE_HDR int				StartServer(int a_nPort, long int a_lnTimeout, struct sockaddr_in* bufForRemAddress = NULL);
+	LINKAGE_HDR int				StartServer(int a_nPort,long int a_lnTimeout, bool bReuse = true,
+											struct sockaddr_in* bufForRemAddress = NULL);
 	
 	LINKAGE_HDR void			StopServer(int a_nQUIT_FLAG = 1);
 
@@ -37,7 +38,7 @@ protected:
 	 * 	0:	ok
 	 *    < 0:	error
 	 */
-	LINKAGE_HDR int				CreateServer(int a_nPort, bool a_bLoopback = false);
+	LINKAGE_HDR int				CreateServer(int a_nPort, bool bReuse,bool a_bLoopback = false);
 
 	LINKAGE_HDR int				RunServer(long int a_lnTimeout, struct sockaddr_in* bufForRemAddress);
 

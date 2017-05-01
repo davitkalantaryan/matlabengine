@@ -50,10 +50,15 @@ const char* GenerateMatlabPipeNameV(int a_nPid,int a_nVersion)
 }
 
 
-int GenerateMatlabServerPortNumber(int a_nPid, int a_nTry)
+
+//int GenerateMatlabServerPortNumber(int a_nPid, int a_nTry)
+int GenerateMatlabServerPortNumber2(int a_nEngineNumber)
 {
-	int nPort = (a_nPid + a_nTry + MATLAB_BIND_PORT_NUMBER) % (0xffff);
-	return nPort;
+	if (a_nEngineNumber < MAX_ENGINE_NUMBERS) { 
+		int nPort = (a_nEngineNumber + MATLAB_BIND_PORT_NUMBER) % (0xffff);
+		return nPort;
+	}
+	return -1;
 }
 
 

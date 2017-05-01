@@ -25,6 +25,7 @@
 
 #define	MAX_TRY_NUMBERS			5
 #define MATLAB_BIND_PORT_NUMBER	9183
+#define MAX_ENGINE_NUMBERS		1000
 
 #ifndef NECESSARY_BUF_SIZE
 //#define NECESSARY_BUF_SIZE	3840064
@@ -47,7 +48,8 @@ extern "C"
 
 extern const char* GenerateMatlabPipeName(int pid);
 extern const char* GenerateMatlabPipeNameV(int pid, int version);
-extern int GenerateMatlabServerPortNumber(int pid, int tryNumber);
+//extern int GenerateMatlabServerPortNumber(int pid, int tryNumber);
+extern int GenerateMatlabServerPortNumber2(int engineNumber);
 
 
 #ifdef __cplusplus

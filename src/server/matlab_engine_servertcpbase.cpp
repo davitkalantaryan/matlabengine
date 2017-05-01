@@ -42,24 +42,25 @@ int matlab::engine::ServerTcpBase::AddClient(class ASocketTCP& a_ClientSocket, s
 void matlab::engine::ServerTcpBase::StartServerPrivate(int a_nEngNumber)
 {
 	char vcBuffer[64];
-	int nPort(GenerateMatlabServerPortNumber(0,0));
+	int nPort(GenerateMatlabServerPortNumber2(a_nEngNumber));
 	
+	if (nPort < 0) { m_nReturnFromServerThread = nPort; return; }
 	ASocketB::Initialize();
 	gethostname(vcBuffer, 63);
-	
-	snprintf(vcBuffer, 63, "%s:%d\\n",vcBuffer, a_nEngNumber);
-	m_pMatHandle->PrintFromAnyThread(vcBuffer);
 
 #ifdef _CD_VERSION__
-	m_nReturnFromServerThread = AServerTCP::CreateServer(a_nPort, true);
+	m_nReturnFromServerThread = AServerTCP::CreateServer(a_nPort,false, true);
 #else
-	m_nReturnFromServerThread = AServerTCP::CreateServer(nPort);
+	m_nReturnFromServerThread = AServerTCP::CreateServer(nPort,false);
 #endif
 
 	if (m_nReturnFromServerThread != 0){
 		AServerTCP::Close();
 		return;
 	}
+
+	snprintf(vcBuffer, 63, "%s:%d\\n", vcBuffer, a_nEngNumber);
+	m_pMatHandle->PrintFromAnyThread(vcBuffer);
 	
 	m_nServerRuns = 1;
 	AServerTCP::RunServer(1000, &m_bufForRemAddress);
