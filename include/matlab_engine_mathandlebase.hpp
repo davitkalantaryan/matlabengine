@@ -39,6 +39,7 @@ public:
 	virtual void Stop() = 0;
 	
 	int newFrprint(int out, const char* fmt, ...);
+	int Exist(const char* name, const char* type=NULL);
 
 	virtual mxArray* newGetVariable(const char* workspace, const char* name)=0;
 	virtual int newPutVariable(const char *workspace, const char *varname,const mxArray *pm) = 0;

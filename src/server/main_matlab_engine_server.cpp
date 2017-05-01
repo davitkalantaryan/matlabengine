@@ -59,7 +59,7 @@ int main(int a_argc, char* a_argv[])
 #endif
 #endif // #ifdef WIN32
 
-    freopen( "/dev/null", "w", stderr);
+    //freopen( "/dev/null", "w", stderr);
     //freopen( "/dev/null", "w", stdout);
 
     matlab::engine::ServerTcpEng aServer;

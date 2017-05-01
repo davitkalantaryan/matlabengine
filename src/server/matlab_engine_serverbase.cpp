@@ -14,6 +14,7 @@
 
 //#include "matrix.h"
 //#include <stdio.h>
+#include <string>
 #include "matlab_engine_serverbase.hpp"
 #include "matlab_bytestream_routines.h"
 
@@ -241,6 +242,8 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 	mxArray* vOutputs[MAXIMUM_NUMBER_OF_IN_AND_OUTS];
 	mxArray* vInputs[MAXIMUM_NUMBER_OF_IN_AND_OUTS];
 	SocketForServer aSocket(pItem->senderReceiver, m_fpReceive, m_fpSend);
+	std::string aScriptToCall;
+	const char* cpcScriptToCall = "";
 	int nReturn(-1);
 	int32_ttt nInputs;
 	int32_ttt i,nOutputs(0);
@@ -266,34 +269,39 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 		nOutputs = pItem->serializer.NumOfExpOutsOrError()>MAXIMUM_NUMBER_OF_IN_AND_OUTS ?
 			MAXIMUM_NUMBER_OF_IN_AND_OUTS : pItem->serializer.NumOfExpOutsOrError();
 
+		cpcScriptToCall = pItem->serializer.MatlabScriptName3();
+
 		if (((nInputs == 0) && (nOutputs<2)) || (nOutputs == 0)) // try any remaining outs
 		{
-			vOutputs[0] = m_pMatHandle->newGetVariable("base", "ans");
-			if (vOutputs[0])
-			{
+			if (nOutputs == 1) {
+				aScriptToCall = std::string("ans=") + pItem->serializer.MatlabScriptName3();
+				cpcScriptToCall = aScriptToCall.c_str();
+			}
+			if (m_pMatHandle->Exist("ans", "var")) {
 				nIsAnsExist = 1;
 				m_pMatHandle->newEvalStringWithTrap("old__ans=ans;clear ans");
-				mxDestroyArray(vOutputs[0]);
 			}
+
 		}
 
 		if ((nInputs == 0) && (nOutputs<2)) // eval string is called
 		{
-			pReturnFromCallMatlab = m_pMatHandle->newEvalStringWithTrap(
-				pItem->serializer.MatlabScriptName3());
+			pReturnFromCallMatlab = m_pMatHandle->newEvalStringWithTrap(cpcScriptToCall);
 		}
 		else
 		{
 			pReturnFromCallMatlab = m_pMatHandle->newCallMATLABWithTrap(nOutputs, vOutputs, 
-				nInputs,vInputs, pItem->serializer.MatlabScriptName3());
+				nInputs,vInputs, cpcScriptToCall);
 		}
 
 		if (((nInputs == 0) && (nOutputs<2)) || (nOutputs == 0)) // try any remaining outs
 		{
-			vOutputs[0] = m_pMatHandle->newGetVariable("base", "ans");
-            if (vOutputs[0]) { nOutputs = 1; }
-			else if (nIsAnsExist){ m_pMatHandle->newEvalStringWithTrap("ans=old__ans;"); }
-			if (nIsAnsExist) { m_pMatHandle->newEvalStringWithTrap("clear old__ans"); }
+			if (m_pMatHandle->Exist("ans", "var")) {
+				vOutputs[0] = m_pMatHandle->newGetVariable("base", "ans");
+				nOutputs = 1;
+			}
+			else { nOutputs = 0; }
+			if (nIsAnsExist) { m_pMatHandle->newEvalStringWithTrap("ans=old__ans;"); }
 		}
 
 		if (pReturnFromCallMatlab){nOutputs=1;vOutputs[0]=pReturnFromCallMatlab; goto returnPoint;}
@@ -327,9 +335,7 @@ returnPoint:
 		&pItem->vFuncs,&aSocket,cpcInfoOrError, 
 		nReturn,nOutputs, (TypeConstVoidPtr*)vOutputs);
 
-	if(!pReturnFromCallMatlab){
-		for(i=0;i<nOutputs;++i){mxDestroyArray(vOutputs[i]);}
-	}
+	for (i = 0; i < nOutputs; ++i) { if (vOutputs[i]) { mxDestroyArray(vOutputs[i]); } }
 
 #ifdef WIN32
 #else  // #ifdef WIN32

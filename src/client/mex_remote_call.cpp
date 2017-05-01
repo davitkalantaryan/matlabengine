@@ -47,6 +47,70 @@ typedef const void* TypeConstVoidPtr;
 void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 	int a_nNumInps, const mxArray*a_Inputs[])
 {
+
+#if 0
+
+	if ((a_nNumInps < 1) || !mxIsChar(a_Inputs[0]))
+	{
+		mexErrMsgTxt("argument error");
+		return;
+	}
+
+	int i,nSize = (int)mxGetNumberOfElements(a_Inputs[0]);
+	char* pcScriptName = (char*)alloca(nSize + 2);
+	mxArray* pException = NULL;
+	mxArray* vInputs[50];
+
+	a_nNumInps = a_nNumInps > 51 ? 51 : a_nNumInps;
+
+	for (i=1; i < a_nNumInps; ++i) { vInputs[i - 1] = mxDuplicateArray(a_Inputs[i]); }
+
+	mxGetString(a_Inputs[0], pcScriptName, nSize + 1);
+	mexPrintf("len:%d,name=%s\n", nSize, pcScriptName);
+
+	switch (a_nNumInps)
+	{
+	case 1:
+		pException = mexEvalStringWithTrap(pcScriptName);
+		while (pException && (i<1000)) {
+			mexPrintf("destroying exception %d!\n",i);
+			mxDestroyArray(pException);
+			mexPrintf("destroying exception done %d!\n",i);
+			pException = NULL;
+			pException = mexEvalStringWithTrap(pcScriptName);
+			++i;
+		}
+		break;
+	default:
+		pException=mexCallMATLABWithTrap(a_nNumOuts, a_Outputs, a_nNumInps - 1, vInputs, pcScriptName);
+		while (pException && (i<1000)) {
+			mexPrintf("destroying exception %d!\n",i);
+			mxDestroyArray(pException);
+			mexPrintf("destroying exception done %d!\n",i);
+			pException = NULL;
+			pException = mexCallMATLABWithTrap(a_nNumOuts, a_Outputs, a_nNumInps - 1, vInputs, pcScriptName);
+			++i;
+		}
+		break;
+	}
+
+	--a_nNumInps;
+	for (i = 0; i < a_nNumInps; ++i) { mxDestroyArray(vInputs[i]); }
+
+	if (a_nNumOuts&&a_Outputs[0]&&(!pException)) { 
+		mexPrintf("firstOutDataType=%d:%s\n",(int)mxGetClassID(a_Outputs[0]),mxGetClassName(a_Outputs[0])); 
+	}
+
+	if (pException) {
+		mexPrintf("destroying exception!\n");
+		mxDestroyArray(pException);
+		mexPrintf("destroying exception done!\n");
+	}
+
+
+	return;
+#else // #if 1/0
+	mxArray* pException = NULL;
     int i,nReceived,nAdrStrLenPlus15;
 	int32_ttt nOutputs;
 
@@ -170,6 +234,13 @@ recieveResult:
 	if (nReceived == _SOCKET_TIMEOUT_){goto returnWithTimeout;}
 	else if (nReceived < 0){goto cleanCurrentConn;}
 
+	if (s_serializeDes.NumOfExpOutsOrError() && nOutputs)
+	{
+		pException = a_Outputs[0];
+		a_Outputs[0] = NULL;
+		mexCallMATLAB(0, NULL, 1, &pException, "throw");
+	}
+
 	return;
 returnWithTimeout:
 
@@ -185,6 +256,8 @@ cleanCurrentConn:
 	delete s_pCurrentConnect;
 	s_pCurrentConnect = NULL;
 	mexErrMsgTxt("Error durring calling script in the remote host");
+
+#endif // #if 1/0
 
 }
 

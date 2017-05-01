@@ -51,7 +51,7 @@ static int32_ttt SerializeToResourseCurrent(
 
 	if (!pCellArray) {/*error handling?*/return -1; }
 	for (int i(0); i < a_numOfArgs; ++i) {
-		mxSetCell(pCellArray, i, mxDuplicateArray(vArrays[i]));
+		if(vArrays[i]){mxSetCell(pCellArray, i, mxDuplicateArray(vArrays[i]));}
 	}
 	pMatHandle->newCallMATLABWithTrap(1, &pcByteArray, 1, &pCellArray, "getByteStreamFromArray");
 	mxDestroyArray(pCellArray);

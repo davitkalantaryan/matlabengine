@@ -146,7 +146,11 @@ void matlab::engine::MatHandleEng::MatlabThreadFunction()
     //m_pEngine = engOpen("init_root_and_call matlab_R2016a");
     //m_pEngine = engOpen(NULL);
     //m_pEngine = engOpen("matlab -nodesktop");
+#ifdef WIN32
+	m_pEngine = engOpen(NULL);
+#else
     m_pEngine = engOpen("/usr/local/bin/matlab_R2016a");
+#endif
     //printf("engine=%p\n",m_pEngine);
     if(!m_pEngine){m_nReturn=START_RET::ENG_ERROR;return;}
     m_nRun=1;

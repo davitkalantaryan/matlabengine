@@ -20,6 +20,28 @@ matlab::engine::MatHandleBase::~MatHandleBase()
 }
 
 
+int matlab::engine::MatHandleBase::Exist(const char* a_name, const char* a_type)
+{
+	double* plfReturn;
+	mxArray* vInputs[2];
+	mxArray* aOutput=NULL;
+	int nReturn,nNumOfInputs(1);
+
+	vInputs[0] = mxCreateString(a_name);
+	if (a_type) {
+		vInputs[1] = mxCreateString(a_type);
+		nNumOfInputs = 2;
+	}
+	this->newCallMATLABWithTrap(1, &aOutput, nNumOfInputs, vInputs, "exist");
+	plfReturn = mxGetPr(aOutput);
+	nReturn = (int)((*plfReturn)+0.5);
+	mxDestroyArray(aOutput);
+	if (a_type) { mxDestroyArray(vInputs[1]); }
+	mxDestroyArray(vInputs[0]);
+	return nReturn;
+}
+
+
 int matlab::engine::MatHandleBase::newFrprint(int a_out, const char* a_fmt, ...)
 {
 	int nReturn;

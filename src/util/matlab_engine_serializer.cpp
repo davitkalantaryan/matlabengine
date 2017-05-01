@@ -175,10 +175,6 @@ int32_ttt	matlab::engine::Serializer::ReceiveScriptNameAndArrays2(
 	a_fncs->fpDeseRsToArgs = versioning::FindDeseRsToArgs(nVersion, nSeriType, a_fncs);
 	if (!a_fncs->fpDeseRsToArgs) { return nNumOfArgs ? -1 : 0; }// Function to handle not found
 	(*a_fncs->fpDeseRsToArgs)(a_nNumOfArraysIn, a_vpArrays, aResource);
-
-	(*a_fncs->fpDeseriToRs)(
-		m_matHandle, &aResource, *m_pnArgumentByteStreamLength,
-		m_pWholeBuffer + COMMON_SERI_HEADER_LEN);
 	
 	return nNumOfArgs;
 }
