@@ -23,7 +23,7 @@
 #endif
 #endif // #ifndef getpid_gettid_defined
 
-#define	MAX_TRY_NUMBERS			5
+#define	MAX_TRY_NUMBERS2			5
 #define MATLAB_BIND_PORT_NUMBER	9183
 #define MAX_ENGINE_NUMBERS		1000
 

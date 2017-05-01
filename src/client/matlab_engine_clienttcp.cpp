@@ -16,19 +16,19 @@
 #endif
 
 
-int matlab::engine::ClientTcp::ConnectToServer(const char* a_serverName, int a_nPid)
+int matlab::engine::ClientTcp::ConnectToServer(const char* a_serverName, int a_nEngineNumber)
 {
 	char cResp;
 	int nRet(-1);
-	for (int nTry(0);nTry < MAX_TRY_NUMBERS;++nTry)
+	int nPort(GenerateMatlabServerPortNumber2(a_nEngineNumber));
+
+	if (nPort < 0) { return nPort; }
+	nRet = ASocketTCP::CreateClient(a_serverName, nPort, 1000);
+	if (nRet == 0)
 	{
-		nRet = ASocketTCP::CreateClient(a_serverName, GenerateMatlabServerPortNumber(a_nPid, nTry), 1000);
-		if (nRet == 0)
-		{
-			nRet = ASocketTCP::RecvData(&cResp, 1, 10000, 1000);
-			if ((nRet == 1) && (cResp == 'r')) { nRet = 0; break; }
-		}//if (nRet == 0)
-	}
+		nRet = ASocketTCP::RecvData(&cResp, 1, 10000, 1000);
+		if ((nRet == 1) && (cResp == 'r')) { nRet = 0; }
+	}//if (nRet == 0)
 
 	return nRet;
 }
