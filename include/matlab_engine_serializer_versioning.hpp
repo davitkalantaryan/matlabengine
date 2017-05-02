@@ -47,6 +47,7 @@ typedef int32_ttt (*TypeSerializeToResourse)(
 
 typedef void (*TypeSeResToBtStream)(
 	int32_ttt byteStrLen, u_char_ttt* byteStream,
+	int32_ttt numOfArgs, const void* vpArgs[],
 	TpResourse resourse);
 
 typedef int32_ttt (*TypeDeSeriToResourse)(
@@ -56,6 +57,7 @@ typedef int32_ttt (*TypeDeSeriToResourse)(
 
 typedef void (*TypeDeseResToArgs)(
 	int32_ttt numOfArgs, void* vpArgs[],
+	int32_ttt byteStrLen, const u_char_ttt* byteStream,
 	TpResourse resourse);
 
 class Versionizer

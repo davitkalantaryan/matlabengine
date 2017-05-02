@@ -241,6 +241,7 @@
     <ClCompile Include="..\..\..\src\common\common_serializer.cpp" />
     <ClCompile Include="..\..\..\src\common\common_socketbase.cpp" />
     <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_matundoc.cpp" />
+    <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_raw1.cpp" />
     <ClCompile Include="..\..\..\src\server\main_matlab_engine_server.cpp" />
     <ClCompile Include="..\..\..\src\server\matlab_engine_serverbase.cpp" />
     <ClCompile Include="..\..\..\src\server\matlab_engine_servertcpbase.cpp" />

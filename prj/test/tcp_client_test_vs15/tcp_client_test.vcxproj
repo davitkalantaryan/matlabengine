@@ -87,8 +87,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../../include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>use_mat_matrix;SOCKT_SRC_USAGE;WIN32;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../include;../../../src/client;V:\x86_win32\lib\include\matlab</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -101,8 +101,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>SOCKT_SRC_USAGE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../../include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>use_mat_matrix;SOCKT_SRC_USAGE;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../include;../../../src/client;C:\Program Files\Matlab\R2011a\extern\include;C:\Program Files\Matlab\R2015a\extern\include;C:\Program Files\Matlab\R2016a\extern\include;C:\Program Files\Matlab\R2011b\extern\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -117,8 +117,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../../include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>use_mat_matrix;SOCKT_SRC_USAGE;WIN32;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../include;../../../src/client;V:\x86_win32\lib\include\matlab</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,8 +135,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>SOCKT_SRC_USAGE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../../include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>use_mat_matrix;SOCKT_SRC_USAGE;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../include;../../../src/client;C:\Program Files\Matlab\R2011a\extern\include;C:\Program Files\Matlab\R2015a\extern\include;C:\Program Files\Matlab\R2016a\extern\include;C:\Program Files\Matlab\R2011b\extern\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,9 +146,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\client\matlab_engine_clienttcp.cpp" />
     <ClCompile Include="..\..\..\src\common\asocketb.cpp" />
     <ClCompile Include="..\..\..\src\common\asockettcp.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_serializer.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_socketbase.cpp" />
+    <ClCompile Include="..\..\..\src\mat_matrix\mat_matrix.cpp" />
+    <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_raw1.cpp" />
     <ClCompile Include="..\..\..\src\test\main_tcp_client_test.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_serializer.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_serializer_versioning.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_pipe_name.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\matlab_engine_serializer_versioning.hpp" />
+    <ClInclude Include="..\..\..\include\mat_matrix.h" />
+    <ClInclude Include="..\..\..\src\client\matlab_engine_clienttcp.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\include\mat_matrix.tos" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

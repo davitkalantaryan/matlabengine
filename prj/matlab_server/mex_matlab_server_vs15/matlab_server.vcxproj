@@ -259,6 +259,7 @@
     <ClCompile Include="..\..\..\src\common\namedpipebase.cpp" />
     <ClCompile Include="..\..\..\src\common\namedpipeserver.cpp" />
     <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_matundoc.cpp" />
+    <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_raw1.cpp" />
     <ClCompile Include="..\..\..\src\server\matlab_engine_serverbase.cpp" />
     <ClCompile Include="..\..\..\src\server\matlab_engine_servertcpbase.cpp" />
     <ClCompile Include="..\..\..\src\server\matlab_engine_servertcpmex.cpp" />

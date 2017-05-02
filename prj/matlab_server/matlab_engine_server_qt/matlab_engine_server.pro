@@ -33,7 +33,8 @@ SOURCES += ../../../src/common/asockettcp.cpp \
     ../../../src/common/common_socketbase.cpp \
     ../../../src/common/common_argument_parser.cpp \
     ../../../src/util/matlab_engine_serializer_versioning.cpp \
-    ../../../src/seri_versions/matlab_engine_serializer_version5_matundoc.cpp
+    ../../../src/seri_versions/matlab_engine_serializer_version5_matundoc.cpp \
+    ../../../src/seri_versions/matlab_engine_serializer_version5_raw1.cpp
 HEADERS += ../../../src/client/matlab_engine_clienttcp.hpp \
     ../../../include/matlab_pipe_name.h \
     ../../../include/matlab_engine_serializer.hpp \

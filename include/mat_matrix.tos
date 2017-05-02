@@ -1,0 +1,31 @@
+/*****************************************************************************
+ * File   : mat_matrix.tos
+ * created: 2017 May 02
+ *****************************************************************************
+ * Author:	D.Kalantaryan, Tel:+49(0)33762/77552 kalantar
+ * Email :	davit.kalantaryan@desy.de
+ * Mail  :	DESY, Platanenallee 6, 15738 Zeuthen
+ *****************************************************************************
+ * Description
+ *   ...
+ ****************************************************************************/
+#ifndef __mat_matrix_tos__
+#define __mat_matrix_tos__
+
+#ifdef use_mat_matrix
+
+#ifdef __cplusplus
+
+#ifndef __mat_matrix_h__
+#error do not include this file directly
+#include "mat_matrix.h"
+#else
+#endif
+
+
+
+#endif  // #ifdef __cplusplus
+
+#endif  // #ifndef use_mat_matrix
+
+#endif  // #ifndef __mat_matrix_tos__

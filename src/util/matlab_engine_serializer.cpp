@@ -26,23 +26,6 @@
 #include "matlab_engine_serializer_versioning.hpp"
 
 
-static int32_ttt SerializeToResourseCurrent(
-	void* matEng,
-	matlab::engine::versioning::TpResourse* pResourse,
-	int32_ttt numOfArgs, const void* vpArgs[]);
-static void SeResToBtStream(
-	int32_ttt byteStrLen, u_char_ttt* byteStream,
-	matlab::engine::versioning::TpResourse resourse);
-static int32_ttt DeSeriToResourseCurrent(
-	void* matEng,
-	matlab::engine::versioning::TpResourse* pResourse,
-	int32_ttt byteStrLen, const u_char_ttt* byteStream);
-static void DeseResToArgsCurrent(
-	int32_ttt numOfArgs, void* vpArgs[],
-	matlab::engine::versioning::TpResourse resourse);
-
-typedef const mxArray* TypeConstMxArray;
-
 //#pragma warning(disable : 4996)
 
 matlab::engine::Serializer::Serializer(MatHandleBase* a_pMatHandle, 
@@ -86,8 +69,6 @@ int	matlab::engine::Serializer::SendScriptNameAndArrays(
 	int32_ttt a_numOfArrays,
 	const void* a_vpArrays[])
 {
-	mxArray* pcByteArray = NULL;
-	void* pByteStream(NULL);
 	versioning::TpResourse aResource;
 	int32_ttt nStrlenPlus1;
 	int32_ttt nByteStreamLen(0);
@@ -102,7 +83,8 @@ int	matlab::engine::Serializer::SendScriptNameAndArrays(
 
 	nByteStreamLen = (*a_fncs->fpSeriToRs)(m_matHandle, &aResource, a_numOfArrays, a_vpArrays);
 	if (nByteStreamLen<0) { return nByteStreamLen; }
-
+	
+	// if shoulb be added
 	common::Serializer::Resize(nStrlenPlus1 + nByteStreamLen);
 
 	*m_pnAllMinusHeaderLength = nStrlenPlus1 + nByteStreamLen;
@@ -112,7 +94,8 @@ int	matlab::engine::Serializer::SendScriptNameAndArrays(
 	// Next call
 	a_fncs->fpSeRsToBtStr = versioning::FindSeResToBtStream(nVersion, nSeriType, a_fncs);
 	if (!a_fncs->fpSeRsToBtStr) { return -1; } // Function to handle not found
-	(*a_fncs->fpSeRsToBtStr)(nByteStreamLen, m_pWholeBuffer+COMMON_SERI_HEADER_LEN, aResource);
+	(*a_fncs->fpSeRsToBtStr)(nByteStreamLen, m_pWholeBuffer+COMMON_SERI_HEADER_LEN,
+		a_numOfArrays,a_vpArrays, aResource);
 	memcpy(m_pWholeBuffer+COMMON_SERI_HEADER_LEN+nByteStreamLen, a_scriptName, nStrlenPlus1);
 
 	nByteStreamLen=a_pSocket->Send(m_pWholeBuffer,(*m_pnAllMinusHeaderLength)+COMMON_SERI_HEADER_LEN);
@@ -174,7 +157,8 @@ int32_ttt	matlab::engine::Serializer::ReceiveScriptNameAndArrays2(
 	// second call
 	a_fncs->fpDeseRsToArgs = versioning::FindDeseRsToArgs(nVersion, nSeriType, a_fncs);
 	if (!a_fncs->fpDeseRsToArgs) { return nNumOfArgs ? -1 : 0; }// Function to handle not found
-	(*a_fncs->fpDeseRsToArgs)(a_nNumOfArraysIn, a_vpArrays, aResource);
+	(*a_fncs->fpDeseRsToArgs)(a_nNumOfArraysIn, a_vpArrays, *m_pnArgumentByteStreamLength,
+		m_pWholeBuffer + COMMON_SERI_HEADER_LEN, aResource);
 	
 	return nNumOfArgs;
 }

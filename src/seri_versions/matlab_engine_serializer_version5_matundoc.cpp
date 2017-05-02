@@ -20,6 +20,7 @@ static int32_ttt SerializeToResourseCurrent(
 	int32_ttt numOfArgs, const void* vpArgs[]);
 static void SeResToBtStream(
 	int32_ttt a_byteStrLen, u_char_ttt* a_byteStream,
+	int32_ttt numOfArgs, const void* vpArgs[],
 	matlab::engine::versioning::TpResourse a_pResourse);
 static int32_ttt DeSeriToResourseCurrent(
 	void* a_matEng,
@@ -27,14 +28,14 @@ static int32_ttt DeSeriToResourseCurrent(
 	int32_ttt a_byteStrLen, const u_char_ttt* a_byteStream);
 static void DeseResToArgsCurrent(
 	int32_ttt a_numOfArgs, void* a_vpArgs[],
+	int32_ttt a_byteStrLen, const u_char_ttt* a_byteStream,
 	matlab::engine::versioning::TpResourse a_pResourse);
 
-#if 1
 static matlab::engine::versioning::Versionizer s_Versionizer(
 	5, matlab::engine::versioning::SERI_TYPE::MAT_UNDOCU,
 	SerializeToResourseCurrent, SeResToBtStream, 
 	DeSeriToResourseCurrent, DeseResToArgsCurrent);
-#endif
+
 
 typedef const mxArray* TypeConstMxArray;
 static int32_ttt SerializeToResourseCurrent(
@@ -42,7 +43,6 @@ static int32_ttt SerializeToResourseCurrent(
 	matlab::engine::versioning::TpResourse* a_pResourse,
 	int32_ttt a_numOfArgs, const void* a_vpArgs[])
 {
-	void* pByteStream;
 	matlab::engine::MatHandleBase* pMatHandle = (matlab::engine::MatHandleBase*)a_matEng;
 	const TypeConstMxArray* vArrays = (const TypeConstMxArray*)a_vpArgs;
 	mxArray* pcByteArray = NULL;
@@ -57,7 +57,6 @@ static int32_ttt SerializeToResourseCurrent(
 	mxDestroyArray(pCellArray);
 	if (!pcByteArray) { return 0; }
 	nByteStreamLen = (int32_ttt)(mxGetNumberOfElements(pcByteArray)*mxGetElementSize(pcByteArray));
-	pByteStream = mxGetData(pcByteArray);
 
 	*a_pResourse = pcByteArray;
 	return nByteStreamLen;
@@ -66,6 +65,7 @@ static int32_ttt SerializeToResourseCurrent(
 
 static void SeResToBtStream(
 	int32_ttt a_byteStrLen, u_char_ttt* a_byteStream,
+	int32_ttt /*a_numOfArgs*/, const void* /*a_vpArgs*/[],
 	matlab::engine::versioning::TpResourse a_pResourse)
 {
 	void* pByteStream =NULL;
@@ -115,6 +115,7 @@ static int32_ttt DeSeriToResourseCurrent(
 
 static void DeseResToArgsCurrent(
 	int32_ttt a_numOfArgs, void* a_vpArgs[],
+	int32_ttt a_byteStrLen, const u_char_ttt* a_byteStream,
 	matlab::engine::versioning::TpResourse a_pResourse)
 {
 	mxArray* pCellArrayFromByteStream = (mxArray*)a_pResourse;

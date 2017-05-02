@@ -248,7 +248,6 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 	int32_ttt nInputs;
 	int32_ttt i,nOutputs(0);
 	int nIsAnsExist = 0;
-	int32_ttt nSeriType;
 
 #ifdef WIN32
 #else  // #ifdef WIN32
@@ -265,7 +264,6 @@ void matlab::engine::ServerBase::CallMatlabFunction(void* a_arg)
 			&aSocket,10000,
 			MAXIMUM_NUMBER_OF_IN_AND_OUTS, (void**)vInputs);
 		if (nInputs < 0) {goto returnPoint;}
-		nSeriType = pItem->serializer.SeriType();
 		nOutputs = pItem->serializer.NumOfExpOutsOrError()>MAXIMUM_NUMBER_OF_IN_AND_OUTS ?
 			MAXIMUM_NUMBER_OF_IN_AND_OUTS : pItem->serializer.NumOfExpOutsOrError();
 
