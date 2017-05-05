@@ -10,8 +10,13 @@
 #include <stdio.h>
 #include "matlab_pipe_name.h"
 
+#ifdef _MSC_VER
+//#define snprintf _snprint
+#endif
+
 #if defined(_MSC_VER) & (_MSC_VER>1400)
 #pragma warning(disable : 4996)
+#define snprintf sprintf_s
 #endif
 
 #ifdef __cplusplus

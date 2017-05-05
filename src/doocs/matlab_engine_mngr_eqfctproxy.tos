@@ -1,0 +1,77 @@
+#ifndef __matlab_engine_mngr_eqfctproxy_tos__
+#define __matlab_engine_mngr_eqfctproxy_tos__
+
+#ifndef __matlab_engine_mngr_eqfctproxy_hpp__
+#error not include directly
+#include "matlab_engine_mngr_eqfctproxy.hpp"
+#endif
+
+template<typename D_Type, typename DataType>
+matlab::engine::mngr::D_Proxy<D_Type, DataType>::D_Proxy(const char* a_pn, ::EqFct* a_par)
+	:
+	D_Type(a_pn, a_par)
+{
+}
+
+
+template<typename D_Type, typename DataType>
+matlab::engine::mngr::D_Proxy<D_Type, DataType>::~D_Proxy()
+{
+}
+
+
+template<typename D_Type, typename DataType>
+void matlab::engine::mngr::D_Proxy<D_Type, DataType>::set(
+	EqAdr * a_adr, EqData *a_in, EqData * a_out, EqFct * a_fct)
+{
+	EqFctProxy* pPar = (EqFctProxy*)a_fct;
+
+	D_Type::set(a_adr, a_in, a_out, a_fct);
+
+	pPar->GetArray().SetValue(0, D_Type::value());
+	pPar->SendCommandToMatlab(1);
+}
+
+
+template<typename D_Type, typename DataType>
+void matlab::engine::mngr::D_Proxy<D_Type, DataType>::get(
+	EqAdr * a_adr, EqData *a_in, EqData * a_out, EqFct * a_fct)
+{
+        //EqFctProxy* pPar = (EqFctProxy*)a_fct;
+
+	D_Type::get(a_adr, a_in, a_out, a_fct);
+
+	//pPar->GetArray().SetValue(0, D_Type::value());
+	//pPar->SendCommandToMatlab(1);
+}
+
+
+/*////////////////////////////*/
+/*///////////////*/
+template<class DataType>
+matlab::engine::mngr::D_Proxy<D_fct, DataType>::D_Proxy(const char* a_pn, ::EqFct* a_par)
+	:
+	D_fct(a_pn, a_par)
+{
+}
+
+
+template<class DataType>
+matlab::engine::mngr::D_Proxy<D_fct, DataType>::~D_Proxy()
+{
+}
+
+
+template<class DataType>
+void matlab::engine::mngr::D_Proxy<D_fct, DataType>::set(
+	EqAdr * a_adr, EqData *a_in, EqData * a_out, EqFct * a_fct)
+{
+	EqFctProxy* pPar = (EqFctProxy*)a_fct;
+
+	//D_Type::set(a_adr, a_in, a_out, a_fct);
+	//pPar->GetArray().SetValue(0, D_Type::value());
+	pPar->SendCommandToMatlab(0);
+}
+
+
+#endif  // #ifndef __matlab_engine_mngr_eqfctproxy_tos__
