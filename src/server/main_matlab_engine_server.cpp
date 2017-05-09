@@ -16,6 +16,8 @@
 
 #ifdef WIN32
 #else  // #ifdef WIN32
+#include <sys/types.h>
+#include <sys/stat.h>
 typedef void(*TYPE_SIG_HANDLER)(int);
 //static void SignalHandlerSimple(int);
 #endif // #ifdef WIN32
@@ -24,10 +26,13 @@ static volatile int s_nRun;
 
 int main(int a_argc, char* a_argv[])
 {
+	int nFork(1);
     int nEngineNumber(0);
     common::argument_parser aParser;
 
     aParser.AddOption("--engine-number",1);
+	aParser.AddOption("--fork", 1);
+	aParser.AddOption("--no-fork",0);
     aParser.AddOption("-en",1);
     aParser.AddOption("--help",0);
     aParser.AddOption("-h",0);
@@ -46,6 +51,9 @@ int main(int a_argc, char* a_argv[])
     if(aParser["--engine-number"]){nEngineNumber=atoi(aParser["--engine-number"]);}
     else if(aParser["-en"]){nEngineNumber=atoi(aParser["-en"]);}
 
+	if (aParser["--fork"]) { nFork = atoi(aParser["--fork"]); }
+	if (aParser["--no-fork"]) { nFork = 0; }
+
 #ifdef WIN32
 #else
 #if 0
@@ -56,11 +64,28 @@ int main(int a_argc, char* a_argv[])
     sigAction.sa_flags = 0;
     sigAction.sa_handler = (TYPE_SIG_HANDLER)SignalHandlerSimple;
     sigaction(SIGINT, &sigAction, &sigActionOld);
-#endif
+#endif  // #if 0
 #endif // #ifdef WIN32
 
     //freopen( "/dev/null", "w", stderr);
     //freopen( "/dev/null", "w", stdout);
+
+	if (nFork)
+	{
+#ifdef WIN32
+#else // #ifdef WIN32
+		if (fork())exit(0);
+		//if( 0 != chdir( WORKING_DIR ) ){fprintf( stderr, "chdir failed!!!" ); return 1;}
+		setsid();
+		umask(0);
+
+		stdin = freopen("/dev/null", "r", stdin);
+		stdout = freopen("/dev/null", "w", stdout);
+		//stderr = freopen( "/dev/null", "w", stderr);
+
+		if (fork())exit(0);
+#endif // #ifdef WIN32
+	}
 
     matlab::engine::ServerTcpEng aServer;
     aServer.StartMServer(nEngineNumber);

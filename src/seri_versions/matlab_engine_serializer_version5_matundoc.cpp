@@ -91,6 +91,7 @@ static int32_ttt DeSeriToResourseCurrent(
 	mxArray* pCellArrayFromByteStream = NULL;
 	int32_ttt nNumOfArray(0);
 
+	*a_pResourse = NULL;
 	if (a_byteStrLen <= 0) { return 0; }
 	pSerializedMatInput = mxCreateNumericMatrix(1, a_byteStrLen, mxUINT8_CLASS, mxREAL);
 

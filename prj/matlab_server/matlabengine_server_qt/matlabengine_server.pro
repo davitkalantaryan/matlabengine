@@ -4,15 +4,25 @@
 # This file can be used to produce Makefile for daqadcreceiver application
 # for PITZ
 
+DEFINES += __NOT_USE_CPP11__
+
 include(../../common/common_qt/matlab_matrix_common.pri)
 TEMPLATE = app
 INCLUDEPATH += ../../../include
+
+#QMAKE_CXXFLAGS += -std=c++11
+#QMAKE_CXXFLAGS += -std=c++0x
+QMAKE_CC = /opt/rh/devtoolset-4/root/usr/bin/gcc
+QMAKE_CXX = /opt/rh/devtoolset-4/root/usr/bin/g++
+QMAKE_LINK = /opt/rh/devtoolset-4/root/usr/bin/g++
+#CONFIG += c++11
 
 # message("includepath=$$INCLUDEPATH")
 LIBS += -leng
 LIBS += -lmat
 LIBS += -lhdf5_hl
 LIBS += -lhdf5
+LIBS += -lpthread
 #CONFIG += c++11
 SOURCES += ../../../src/common/asockettcp.cpp \
     ../../../src/common/asocketb.cpp \

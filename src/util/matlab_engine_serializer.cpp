@@ -155,9 +155,10 @@ int32_ttt	matlab::engine::Serializer::ReceiveScriptNameAndArrays2(
 	if (nNumOfArgs < 0) { return nNumOfArgs; }
 
 	// second call
+	nNumOfArgs = nNumOfArgs>a_nNumOfArraysIn ? a_nNumOfArraysIn:nNumOfArgs;
 	a_fncs->fpDeseRsToArgs = versioning::FindDeseRsToArgs(nVersion, nSeriType, a_fncs);
-	if (!a_fncs->fpDeseRsToArgs) { return nNumOfArgs ? -1 : 0; }// Function to handle not found
-	(*a_fncs->fpDeseRsToArgs)(a_nNumOfArraysIn, a_vpArrays, *m_pnArgumentByteStreamLength,
+	if (!a_fncs->fpDeseRsToArgs) { return nNumOfArgs>0 ? -1 : 0; }// Function to handle not found
+	(*a_fncs->fpDeseRsToArgs)(nNumOfArgs, a_vpArrays, *m_pnArgumentByteStreamLength,
 		m_pWholeBuffer + COMMON_SERI_HEADER_LEN, aResource);
 	
 	return nNumOfArgs;

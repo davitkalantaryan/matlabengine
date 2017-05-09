@@ -255,7 +255,14 @@
     <ClCompile Include="..\..\..\src\common\asockettcp.cpp" />
     <ClCompile Include="..\..\..\src\common\common_functionalities.cpp" />
     <ClCompile Include="..\..\..\src\common\common_serializer.cpp" />
-    <ClCompile Include="..\..\..\src\common\common_socketbase.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_socketbase.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_matundoc.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_bytestream_routines.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlebase.cpp" />

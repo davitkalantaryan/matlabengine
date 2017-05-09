@@ -31,6 +31,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>matlab_engine_server</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>matlabengine_server</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -233,6 +234,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\.aallfiles.2017.01.26\sources2\fts_server.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\common\aservertcp.cpp" />
     <ClCompile Include="..\..\..\src\common\asocketb.cpp" />
     <ClCompile Include="..\..\..\src\common\asockettcp.cpp" />
@@ -257,6 +266,7 @@
     <ClInclude Include="..\..\..\include\asocketb.h" />
     <ClInclude Include="..\..\..\include\asockettcp.h" />
     <ClInclude Include="..\..\..\include\common_argument_parser.hpp" />
+    <ClInclude Include="..\..\..\include\common_defination.h" />
     <ClInclude Include="..\..\..\include\common_fifofast.hpp" />
     <ClInclude Include="..\..\..\include\common_serializer.hpp" />
     <ClInclude Include="..\..\..\include\common_socketbase.hpp" />

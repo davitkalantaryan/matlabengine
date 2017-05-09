@@ -24,6 +24,7 @@
 #endif
 
 // Is C++11
+#ifndef __NOT_USE_CPP11__
 #ifndef __CPP11_DEFINED__
 #if defined(_MSC_VER)
 #if __cplusplus >= 199711L
@@ -37,6 +38,7 @@
 #error this compiler is not supported
 #endif // #if defined(_MSC_VER)
 #endif  // #ifndef __CPP11_DEFINED__
+#endif  // #ifndef __NOT_USE_CPP11__
 
 // This should be done after check
 #ifdef __CPP11_DEFINED__
