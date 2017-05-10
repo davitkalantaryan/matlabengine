@@ -26,21 +26,21 @@
 template <typename TypeArgc, typename TypeArgv>
 void common::argument_parser::ParseCommandLine(TypeArgc a_argc, TypeArgv a_argv[])
 {
-    int nIsArg;
+	SInput aInput;
     const char *aOption0, *aOptionVal;
 
     for (TypeArgc i(0); i<a_argc;)
 	{
         //pnIsArg = m_htOptionsIn.LookupStr(a_argv[i]);
-        if (m_htOptionsIn.count(a_argv[i]))
+        if (m_htOptionsIn2.count(a_argv[i]))
 		{
-            nIsArg = m_htOptionsIn[a_argv[i]];
+			aInput = m_htOptionsIn2[a_argv[i]];
 			aOption0 = a_argv[i];
-			aOptionVal = "";
+			aOptionVal = aInput.defaultValue.c_str();
 			if (i < (--a_argc))
 			{
 				memmove(a_argv + i, a_argv + i + 1, (a_argc - i)*sizeof(TypeArgv));
-                if ((nIsArg)&&(i<(a_argc--)))
+                if ((aInput.isArg)&&((a_argv[i])[0]!='-')&&(i<(a_argc--)))
 				{
 					aOptionVal = a_argv[i];
 					memmove(a_argv + i, a_argv + i + 1, (a_argc - i)*sizeof(TypeArgv)); 

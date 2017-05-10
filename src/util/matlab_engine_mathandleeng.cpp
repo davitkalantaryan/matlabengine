@@ -149,8 +149,8 @@ void matlab::engine::MatHandleEng::MatlabThreadFunction()
 #ifdef WIN32
 	m_pEngine = engOpen(NULL);
 #else
-    m_pEngine = engOpen("/usr/local/bin/matlab_R2016a -nodesktop");
-	if (!m_pEngine) { m_pEngine = engOpen("/usr1/local/MATLAB/R2016b/bin/matlab -nodesktop"); }
+    m_pEngine = engOpen("/usr/local/bin/matlab_R2016a -nodesktop -nodisplay");
+	if (!m_pEngine) { m_pEngine = engOpen("/usr1/local/MATLAB/R2016b/bin/matlab -nodesktop -nodisplay"); }
 #endif
     //printf("engine=%p\n",m_pEngine);
     if(!m_pEngine){m_nReturn=START_RET::ENG_ERROR;return;}

@@ -30,17 +30,17 @@ int main(int a_argc, char* a_argv[])
     int nEngineNumber(0);
     common::argument_parser aParser;
 
-    aParser.AddOption("--engine-number",1);
-	aParser.AddOption("--fork", 1);
-	aParser.AddOption("--no-fork",0);
-    aParser.AddOption("-en",1);
-    aParser.AddOption("--help",0);
-    aParser.AddOption("-h",0);
+    aParser.AddOption("--engine-number",1,"0");
+	aParser.AddOption("--fork", 1,"1");
+	aParser<<"--no-fork";
+    aParser.AddOption("-en",1,"0");
+    aParser<<"--help"<<"-h";
 
     if(a_argc>1)
     {
+		//char** argv = 
         int nArgs(a_argc-1);
-        aParser.ParseCommandLine(nArgs,a_argv);
+        aParser.ParseCommandLine(nArgs,a_argv+1);
     }
 
     if(aParser["--help"] || aParser["-h"]){
@@ -51,7 +51,7 @@ int main(int a_argc, char* a_argv[])
     if(aParser["--engine-number"]){nEngineNumber=atoi(aParser["--engine-number"]);}
     else if(aParser["-en"]){nEngineNumber=atoi(aParser["-en"]);}
 
-	if (aParser["--fork"]) { nFork = atoi(aParser["--fork"]); }
+	if (aParser["--fork"]) { nFork = 1;nFork = atoi(aParser["--fork"]); }
 	if (aParser["--no-fork"]) { nFork = 0; }
 
 #ifdef WIN32
@@ -69,6 +69,7 @@ int main(int a_argc, char* a_argv[])
 
     //freopen( "/dev/null", "w", stderr);
     //freopen( "/dev/null", "w", stdout);
+	printf("fork=%d\n",nFork);
 
 	if (nFork)
 	{

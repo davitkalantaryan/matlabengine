@@ -26,16 +26,19 @@ namespace common
 		argument_parser();
 		virtual ~argument_parser();
 
-		argument_parser& AddOption(const char* option_name,int needs_arg); // adding new option
-		argument_parser& operator<<(const char* option_name); // adding new option
+		argument_parser& AddOption(const std::string& optionName,int isArg, const std::string& defValue); // adding new option
+		argument_parser& operator<<(const std::string& optionName); // adding new option
         const char* operator[](const char* option_name); // find option value
 		template <typename TypeArgc, typename TypeArgv>
 		void	ParseCommandLine(TypeArgc argc, TypeArgv argv[]);
         std::string	HelpString()const;
 
 	private:
+		struct SInput{ int isArg; std::string defaultValue; };
+
+	private:
         std::map<std::string,std::string>	m_htOptionsFound;
-        std::map<std::string,int>			m_htOptionsIn;
+        std::map<std::string, SInput>		m_htOptionsIn2;
 	};
 
 }

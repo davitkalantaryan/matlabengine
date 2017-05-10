@@ -22,15 +22,20 @@ common::argument_parser::~argument_parser()
 {}
 
 
-common::argument_parser&  common::argument_parser::operator<<(const char* a_option_name)
+common::argument_parser&  common::argument_parser::operator<<(const std::string& a_strOptionName)
 {
-	return AddOption(a_option_name,0);
+	return AddOption(a_strOptionName,0,"");
 }
 
 
-common::argument_parser& common::argument_parser::AddOption(const char* a_option_name, int a_needs_arg)
+common::argument_parser& common::argument_parser::AddOption(
+	const std::string& a_strOptionName, int a_nIsArg, const std::string& a_strDefValue)
 {
-    m_htOptionsIn.insert(std::pair<std::string, int>(a_option_name,a_needs_arg));
+	SInput aInput;
+
+	aInput.isArg = a_nIsArg;
+	aInput.defaultValue = a_strDefValue;
+    m_htOptionsIn2.insert(std::pair<std::string, SInput>(a_strOptionName, aInput));
 	return *this;
 }
 
