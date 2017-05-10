@@ -29,9 +29,9 @@
 namespace STD{
 
 #ifdef WIN32
-typedef HANDLE  mutex_native_handle;
+typedef ::HANDLE  mutex_native_handle;
 #else
-typedef pthread_mutex_t mutex_native_handle;
+typedef ::pthread_mutex_t mutex_native_handle;
 #endif
 
 class mutex

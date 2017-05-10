@@ -30,10 +30,10 @@
 namespace STD{
 
 #ifdef WIN32
-typedef HANDLE thread_native_handle;
+typedef ::HANDLE thread_native_handle;
 typedef DWORD SYSTHRRETTYPE;
 #else
-typedef pthread_t thread_native_handle;
+typedef ::pthread_t thread_native_handle;
 typedef void* SYSTHRRETTYPE;
 #endif
 

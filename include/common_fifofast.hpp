@@ -65,7 +65,8 @@ public:
 };
 
 
-#include "common_fifofast.tos"
 } // namespace common
+
+#include "common_fifofast.tos"
 
 #endif // __COMMON_FIFOFAST_HPP__
