@@ -50,7 +50,7 @@ public:
 	virtual ~ServerBase();
 
 public: // These functions should be called in MATLAB run thread
-	int StartMServer(int enngNumber); // !=0 is error, and system will not be started
+	int StartMServer(int enngNumber,const std::string& engineCommand); // !=0 is error, and system will not be started
 	void StopMServer(void);
 
 	int GetRun();

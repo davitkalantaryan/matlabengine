@@ -22,7 +22,7 @@ public:
 	MatHandleMex();
 	virtual ~MatHandleMex();
 
-	int Start() __OVERRIDE__;
+	int Start(const std::string& engineCommand) __OVERRIDE__;
 	void Stop() __OVERRIDE__;
 
 	void SyncCallOnMatlabThread(void* owner, TypeClbK fpClb,void*arg) __OVERRIDE__;

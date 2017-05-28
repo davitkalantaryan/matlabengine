@@ -14,11 +14,17 @@
 
 #ifndef __CPP11_DEFINED__
 
+#ifdef WIN32
+#include <process.h>
+#endif
+
 static STD::SYSTHRRETTYPE ThreadStartupRoutine(void* a_thisThr);
+static STD::SYSTHRRETTYPE ThreadStartupRoutineVoid(void* a_thisThr);
 
 namespace STD{struct SThreadArgs{
-    SThreadArgs(TypeClbKVoid a_stFnc,void* a_thrArg):startRoutine(a_stFnc),thrArg(a_thrArg){}
-    TypeClbKVoid startRoutine;void* thrArg;};}
+    SThreadArgs(TypeClbKVoidPtr a_stFnc,void* a_thrArg):startRoutine(a_stFnc),thrArg(a_thrArg){}
+    SThreadArgs(TypeClbKVoid2 a_stFnc):startRoutineVoid(a_stFnc),thrArg(NULL){}
+    union{TypeClbKVoidPtr startRoutine;TypeClbKVoid2 startRoutineVoid;};void* thrArg;};}
 
 STD::thread::thread()
 {
@@ -26,10 +32,17 @@ STD::thread::thread()
 }
 
 
-STD::thread::thread(TypeClbKVoid a_fpStartFunc,void* a_arg)
+STD::thread::thread(TypeClbKVoidPtr a_fpStartFunc,void* a_arg)
 {
     InitAllMembersPrivate();
-    ConstructThreadVoid(a_fpStartFunc,a_arg);
+    ConstructThreadVoidPtr(a_fpStartFunc,a_arg);
+}
+
+
+STD::thread::thread(TypeClbKVoid2 a_fpStartFunc)
+{
+    InitAllMembersPrivate();
+    ConstructThreadVoid(a_fpStartFunc);
 }
 
 
@@ -85,7 +98,7 @@ void STD::thread::join()
 }
 
 
-void STD::thread::ConstructThreadVoid(TypeClbKVoid a_fpStartFunc,void* a_arg)
+void STD::thread::ConstructThreadVoidPtr(TypeClbKVoidPtr a_fpStartFunc,void* a_arg)
 {
 
     if((!m_pThreadHandle)||(*m_pThreadHandle)){return;}
@@ -95,8 +108,8 @@ void STD::thread::ConstructThreadVoid(TypeClbKVoid a_fpStartFunc,void* a_arg)
 
 #ifdef WIN32
 #error should be implemented
-    unsigned ThreadID;
-    m_Thread = (HANDLE)_beginthreadex( NULL, 0, (unsigned int(__stdcall*)(void*))&ThreadDv::ThreadFuncStatic, this, 0, &ThreadID );
+    //unsigned ThreadID;
+	m_pThreadHandle = (HANDLE)_beginthreadex( NULL, 0, (unsigned int(__stdcall*)(void*))&ThreadDv::ThreadFuncStatic, this, 0, &ThreadID );
 #else  // #ifdef WIN32
     pthread_attr_t      tattr;
     pthread_attr_init(&tattr);
@@ -110,11 +123,53 @@ void STD::thread::ConstructThreadVoid(TypeClbKVoid a_fpStartFunc,void* a_arg)
 }
 
 
+void STD::thread::ConstructThreadVoid(TypeClbKVoid2 a_fpStartFunc)
+{
+
+    if((!m_pThreadHandle)||(*m_pThreadHandle)){return;}
+
+    m_nDublicates = 1;
+    SThreadArgs* pArgs = new SThreadArgs(a_fpStartFunc);
+
+#ifdef WIN32
+#error should be implemented
+    //unsigned ThreadID;
+    m_pThreadHandle = (HANDLE)_beginthreadex( NULL, 0, (unsigned int(__stdcall*)(void*))&ThreadDv::ThreadFuncStatic, this, 0, &ThreadID );
+#else  // #ifdef WIN32
+    pthread_attr_t      tattr;
+    pthread_attr_init(&tattr);
+    //pthread_attr_setscope(&tattr, PTHREAD_SCOPE_PROCESS);
+    pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_JOINABLE);
+    pthread_create( m_pThreadHandle,  &tattr, &ThreadStartupRoutineVoid,pArgs );
+    pthread_attr_destroy(&tattr);
+
+#endif // #ifdef WIN32
+
+}
+
+
 static STD::SYSTHRRETTYPE ThreadStartupRoutine(void* a_thrArgs)
 {
     STD::SThreadArgs* pArgs = (STD::SThreadArgs*)a_thrArgs;
 
     (*(pArgs->startRoutine))(pArgs->thrArg);
+
+#ifdef WIN32
+#error not implemented
+#else // #ifdef WIN32
+    ::pthread_exit(NULL);
+#endif // #ifdef WIN32
+
+    delete pArgs;
+    return (STD::SYSTHRRETTYPE)0;
+}
+
+
+static STD::SYSTHRRETTYPE ThreadStartupRoutineVoid(void* a_thrArgs)
+{
+    STD::SThreadArgs* pArgs = (STD::SThreadArgs*)a_thrArgs;
+
+    (*(pArgs->startRoutineVoid))();
 
 #ifdef WIN32
 #error not implemented

@@ -40,9 +40,10 @@ matlab::engine::MatHandleEng::~MatHandleEng()
 }
 
 
-int matlab::engine::MatHandleEng::Start()
+int matlab::engine::MatHandleEng::Start(const std::string& a_strEngineCommand)
 {
     if(m_nRun == 1){return START_RET::ALREADY_RUN;}
+	m_strEngineCommand = a_strEngineCommand;
     m_threadMat = STD::thread(&MatHandleEng::MatlabThreadFunction,this);
     m_nReturn = 0;
     while((m_pEngine==NULL)&&(m_nReturn==0)){Sleep(10);}
@@ -140,19 +141,28 @@ mxArray* matlab::engine::MatHandleEng::newCallMATLABWithTrap(
 
 void matlab::engine::MatHandleEng::MatlabThreadFunction()
 {
+	const char* cpcCommandToRun;
+	std::string strEngineCommand;
+
     if(m_pEngine){return;}
 
     m_nRun = 0;
-    //m_pEngine = engOpen("init_root_and_call matlab_R2016a");
-    //m_pEngine = engOpen(NULL);
-    //m_pEngine = engOpen("matlab -nodesktop");
+
+	if (m_strEngineCommand == ""){
 #ifdef WIN32
-	m_pEngine = engOpen(NULL);
+		cpcCommandToRun = NULL;
 #else
-    m_pEngine = engOpen("/usr/local/bin/matlab_R2016a -nodesktop -nodisplay");
-	if (!m_pEngine) { m_pEngine = engOpen("/usr1/local/MATLAB/R2016b/bin/matlab -nodesktop -nodisplay"); }
+		strEngineCommand = std::string("/export/doocs/bin/matlab_R2016a")+" -nodesktop"+" -nodisplay";
+		cpcCommandToRun = strEngineCommand.c_str();
 #endif
-    //printf("engine=%p\n",m_pEngine);
+	}
+	else {
+		strEngineCommand = m_strEngineCommand + " -nodesktop" + " -nodisplay";
+		cpcCommandToRun = strEngineCommand.c_str();
+	}
+
+	m_pEngine = engOpen(cpcCommandToRun);
+
     if(!m_pEngine){m_nReturn=START_RET::ENG_ERROR;return;}
     m_nRun=1;
     m_nReturn=START_RET::STARTED;

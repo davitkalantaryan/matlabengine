@@ -70,12 +70,12 @@ matlab::engine::ServerBase::~ServerBase()
 }
 
 
-int matlab::engine::ServerBase::StartMServer(int a_nEngNumber)
+int matlab::engine::ServerBase::StartMServer(int a_nEngNumber, const std::string& a_engineCommand)
 {
 	int nError;
 	if (m_nRun != 0) { return 0; }
 	m_nRun = 1;
-	nError = m_pMatHandle->Start();
+	nError = m_pMatHandle->Start(a_engineCommand);
 	if (nError == START_RET::ENG_ERROR) { m_nRun = 0;return START_RET::ENG_ERROR;}
 	m_resourceThread = STD::thread(&matlab::engine::ServerBase::ResourceThread, this);
 	m_nReturnFromServerThread = 0;

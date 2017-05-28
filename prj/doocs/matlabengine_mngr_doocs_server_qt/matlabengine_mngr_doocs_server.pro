@@ -5,6 +5,7 @@
 # for PITZ
 include(../../common/common_qt/doocs_server_common.pri)
 DEFINES += use_mat_matrix
+#DEFINES += __NOT_USE_CPP11__
 TEMPLATE = app
 INCLUDEPATH += /doocs/lib/matlab/R2010a/include
 INCLUDEPATH += /doocs/lib/matlab/R2016a/include

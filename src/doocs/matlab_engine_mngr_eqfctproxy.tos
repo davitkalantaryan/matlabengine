@@ -6,6 +6,51 @@
 #include "matlab_engine_mngr_eqfctproxy.hpp"
 #endif
 
+template<typename D_Type>
+matlab::engine::mngr::D_arg<D_Type>::D_arg(const char* a_pn, ::EqFct* a_par)
+	:
+	D_Type(a_pn, a_par)
+{
+}
+
+
+template<typename D_Type>
+matlab::engine::mngr::D_arg<D_Type>::D_arg(const char* a_pn, int a_size,::EqFct* a_par)
+	:
+	D_Type(a_pn, a_size,a_par)
+{
+}
+
+
+template<typename D_Type>
+matlab::engine::mngr::D_arg<D_Type>::~D_arg()
+{
+}
+
+
+template<typename D_Type>
+void matlab::engine::mngr::D_arg<D_Type>::set(
+	EqAdr* a_dcsAdr, EqData *a_fromUser, EqData * a_toUser, EqFct * a_fct)
+{
+	EqFctProxy* pPar = (EqFctProxy*)a_fct;
+
+	D_Type::set(a_dcsAdr, a_fromUser, a_toUser, a_fct);
+	pPar->SetForProperties(a_fromUser,a_toUser);
+}
+
+
+template<typename D_Type>
+void matlab::engine::mngr::D_arg<D_Type>::get(
+	EqAdr* a_dcsAdr, EqData *a_fromUser, EqData * a_toUser, EqFct * a_fct)
+{
+	EqFctProxy* pPar = (EqFctProxy*)a_fct;
+
+	D_Type::get(a_dcsAdr, a_fromUser, a_toUser, a_fct);
+	pPar->GetForProperties(a_fromUser, a_toUser);
+}
+
+#if 0
+
 template<typename D_Type, typename DataType>
 matlab::engine::mngr::D_Proxy<D_Type, DataType>::D_Proxy(const char* a_pn, ::EqFct* a_par)
 	:
@@ -72,6 +117,8 @@ void matlab::engine::mngr::D_Proxy<D_fct, DataType>::set(
 	//pPar->GetArray().SetValue(0, D_Type::value());
 	pPar->SendCommandToMatlab(0);
 }
+
+#endif // #if 0
 
 
 #endif  // #ifndef __matlab_engine_mngr_eqfctproxy_tos__

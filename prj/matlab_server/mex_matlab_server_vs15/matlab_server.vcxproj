@@ -305,9 +305,11 @@
     <ClInclude Include="..\..\..\include\matlab_engine_serializer.hpp" />
     <ClInclude Include="..\..\..\include\matlab_engine_serializer_versioning.hpp" />
     <ClInclude Include="..\..\..\include\matlab_pipe_name.h" />
+    <ClInclude Include="..\..\..\include\mutex_cpp11.hpp" />
     <ClInclude Include="..\..\..\include\namedpipebase.h" />
     <ClInclude Include="..\..\..\include\namedpipeserver.h" />
     <ClInclude Include="..\..\..\include\stdafx.h" />
+    <ClInclude Include="..\..\..\include\thread_cpp11.hpp" />
     <ClInclude Include="..\..\..\src\server\matlab_engine_serverbase.hpp" />
     <ClInclude Include="..\..\..\src\server\matlab_engine_servertcpbase.hpp" />
     <ClInclude Include="..\..\..\src\server\matlab_engine_servertcpmex.hpp" />

@@ -19,8 +19,11 @@
 #include <windows.h>
 #else
 #include <unistd.h>
+#ifndef Sleep
 #define Sleep(__X__)	usleep(1000*(__X__))
 #endif
+#endif
+#include <string>
 
 namespace matlab{ namespace engine{
 
@@ -35,7 +38,7 @@ public:
 	MatHandleBase();
 	virtual ~MatHandleBase();
 
-	virtual int Start() = 0; // 0 no_error
+	virtual int Start(const std::string& engineCommand) = 0; // 0 no_error
 	virtual void Stop() = 0;
 	
 	int newFrprint(int out, const char* fmt, ...);

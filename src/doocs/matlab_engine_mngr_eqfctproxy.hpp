@@ -22,84 +22,112 @@ extern int g_nDebugLevel;
 #define DEBUG_APP_RAW2(_level_,...)			DEBUG_APP_RAW0(_level_,printf,__VA_ARGS__)
 #endif  // #ifndef DEBUG_APP_RAW0
 
+extern bool g_bUpdateNeeded;
+
 #define EQFCT_PROXY_CODE	301
 #ifndef use_mat_matrix
 #define use_mat_matrix
 #endif
 
+#include <string>
 #include "eq_fct.h"
 #include "common_defination.h"
 #include "matlab_engine_clienttcp.hpp"
 #include "matlab_engine_serializer.hpp"
 #include "mat_matrix.h"
+#include <sys/timeb.h>
+#include <sys/types.h>
 
 namespace matlab{ namespace engine{ namespace mngr{
 
-template<typename D_Type,typename DataType>
-class D_Proxy : public D_Type
+template <typename D_Type>
+class D_arg : public D_Type
 {
 public:
-	D_Proxy(const char* pn, ::EqFct* par);
-	virtual ~D_Proxy();
+	D_arg(const char* pn, ::EqFct* par);
+	D_arg(const char* pn, int size, ::EqFct* par);
+	virtual ~D_arg();
 
 protected:
 	virtual void set(EqAdr * dcsAdr, EqData *fromUser, EqData * toUser, EqFct * fct)__OVERRIDE__;
 	virtual void get(EqAdr * dcsAdr, EqData *fromUser, EqData * toUser, EqFct * fct)__OVERRIDE__;
 };
 
-template<class DataType>
-class D_Proxy<D_fct, DataType> : public D_fct
+
+class D_expression : public D_string
 {
 public:
-	D_Proxy(const char* pn, ::EqFct* par);
-	virtual ~D_Proxy();
-
-protected:
-	virtual void set(EqAdr * dcsAdr, EqData *fromUser, EqData * toUser, EqFct * fct)__OVERRIDE__;
+	D_expression(const char* pn, ::EqFct* par);
+	void set(EqAdr * dcsAdr, EqData *fromUser, EqData * toUser, EqFct * fct)__OVERRIDE__;
+	void get(EqAdr * dcsAdr, EqData *fromUser, EqData * toUser, EqFct * fct)__OVERRIDE__;
 };
 
 
-class D_engineNum : public D_int
+class D_startEngine : public D_fct
 {
 public:
-	D_engineNum(const char* pn, ::EqFct* par);
+	D_startEngine(const char* pn, ::EqFct* par);
 	void set(EqAdr * dcsAdr, EqData *fromUser, EqData * toUser, EqFct * fct)__OVERRIDE__;
 };
 
 
 class EqFctProxy : public ::EqFct
 {
+	friend class D_startEngine;
+	friend class D_expression;
 public:
 	EqFctProxy(int a_nEngineNumber);
 	virtual ~EqFctProxy();
 
-	PersistantArgsGroup& GetArray();
-
-	int SendCommandToMatlab(int numOfInputs);
-	int ReceiveResultFromMatlab();
-
 	static EqFctProxy*	EngineControled2(int engine);
+	static void			StartNewEngine(const std::string& commandToStart);
+	static int			InitProxies();
+	static void			DestroyProxies();
+	
+	void				SetForProperties(EqData *fromUser, EqData *toUser);
+	void				GetForProperties(EqData *fromUser, EqData *toUser);
+	void				TryConnect();
 
 protected:
 	virtual int		fct_code(void) __OVERRIDE__;
 	virtual void    update(void) __OVERRIDE__;
 	virtual void	init(void) __OVERRIDE__;
 	virtual void	cancel(void) __OVERRIDE__;
+	virtual void    set(EqAdr *, EqData *, EqData *)__OVERRIDE__;
+	virtual void    get(EqAdr *, EqData *, EqData *)__OVERRIDE__;
 
-	int				TryConnect();
+	int				SendCommandToMatlab(int numOfInputs,const char* a_cpcScriptName="");
+	int				ReceiveResultFromMatlab();
+	void			GetForPropertiesPrivate(EqData *fromUser, EqData *toUser);
 
 protected:
-    D_string						m_engineName;
 	D_string						m_matlabScriptName;
-	D_string						m_commandToStartMatlabEngine;
 	D_int							m_numberOfExpectedOutputs;
-	D_engineNum						m_engineNumber;
+	D_int							m_numberOfLastOutputs;
+	D_int							m_engineNumber;
+	D_string						m_engineStartCommand;
+	D_int							m_isConnected2;
+	D_int							m_recvTimeoutMs;
+	D_startEngine					m_engineStarter;
+	D_int							m_maxTryCount;
 
-	D_Proxy<D_int, int>				m_argInt;
-	D_Proxy<D_float, float>			m_argFloat;
-	D_Proxy<D_double, double>		m_argDouble;
-	D_Proxy<D_string, char*>		m_argString;
-	D_Proxy<D_fct, void>			m_argVoid;
+#if 0
+#define	DATA_NULL               0
+#define	DATA_INT                1
+#define	DATA_FLOAT              2
+#define	DATA_STRING             3
+#define	DATA_BOOL               4
+#define	DATA_DOUBLE             6
+#define	DATA_SPECTRUM           19
+#endif // #if 0
+	D_arg<D_fct>					m_argVoid;
+	D_arg<D_int>					m_argInt;
+	D_arg<D_float>					m_argFloat;
+	D_arg<D_string>					m_argString;
+	D_arg<D_int>					m_argBool;
+	D_arg<D_double>					m_argDouble;
+	D_arg<D_spectrum>				m_argSpectrum;
+	D_expression					m_expression;
 
     PersistantArgsGroup				m_vArray;
     Serializer						m_serializeDes;
@@ -107,6 +135,10 @@ protected:
     versioning::FncPointers			m_vFuncs;
     int								m_nEngineNumber;
     bool							m_bPendingTask;
+	bool							m_bAnyResultsExist;
+	bool							m_bIsConnected2;
+	int								m_nNumOfTryOfStart;
+	struct timeb					m_lastStartTime;
 };
 
 }}}

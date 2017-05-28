@@ -26,7 +26,7 @@ matlab::engine::MatHandleMex::~MatHandleMex()
 }
 
 
-int matlab::engine::MatHandleMex::Start()
+int matlab::engine::MatHandleMex::Start(const std::string& /*engineCommand*/)
 {
 	if (m_pListener) {return START_RET::ALREADY_RUN;}	
 	m_pListener = CreateMListener();

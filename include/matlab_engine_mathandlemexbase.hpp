@@ -21,7 +21,7 @@ public:
 	MatHandleMexBase() {}
 	virtual ~MatHandleMexBase() {}
 
-	virtual int Start() __OVERRIDE__  {return START_RET::STARTED;}
+	virtual int Start(const std::string& /*engineCommand*/) __OVERRIDE__  {return START_RET::STARTED;}
 	virtual void Stop() __OVERRIDE__ {}
 
 	mxArray* newGetVariable(const char* workspace, const char* name) __OVERRIDE__;

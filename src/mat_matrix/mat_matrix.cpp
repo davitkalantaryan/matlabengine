@@ -15,6 +15,18 @@
 #include <memory.h>
 #include <malloc.h>
 #include <string.h>
+#include <stdio.h>
+#ifdef WIN32
+#ifndef snprintf
+#define snprintf _snprintf
+#endif
+#endif
+
+#ifdef _MSC_VER
+#if(_MSC_VER >= 1400)
+#pragma warning(disable : 4996)
+#endif
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -390,6 +402,127 @@ int PersistantArgsGroup::SetValue(int a_index, const nwTypeChar& a_value)
 	memcpy(m_ppArgs[a_index]->pData, a_value, unStrlenPlus1);
 	return 0;
 }
+
+
+int PersistantArgsGroup::GetValue(int a_index, char* a_buffer, int a_bufferLen)const
+{
+	mxClassID	classId;
+	void*		pData;
+
+	if(a_index>=m_nSize){return -1;}
+	if(!m_ppArgs[a_index]){ return -2;}
+	classId = nwGetClassID(m_ppArgs[a_index]);
+	pData = nwGetData(m_ppArgs[a_index]);
+	if(!pData){return -3;}
+
+	switch (classId)
+	{
+	case mxLOGICAL_CLASS:
+	{
+		bool* bpData = (bool*)pData;
+		snprintf(a_buffer, a_bufferLen,"%s", (*bpData) ? "true" : "false");
+	}
+	break;
+
+	case mxCHAR_CLASS:
+	{
+		char* bpData = (char*)pData;
+		strncpy(a_buffer, bpData, a_bufferLen);
+	}
+	break;
+
+	case mxDOUBLE_CLASS:
+	{
+		double* bpData = (double*)pData;
+		snprintf(a_buffer, a_bufferLen, "%lf", *bpData);
+	}
+	break;
+
+	case mxSINGLE_CLASS:
+	{
+		float* bpData = (float*)pData;
+		snprintf(a_buffer, a_bufferLen, "%f", *bpData);
+	}
+	break;
+
+	case mxINT8_CLASS:
+	{
+		int8_ttt* bpData = (int8_ttt*)pData;
+		snprintf(a_buffer, a_bufferLen, "%d", (int)(*bpData));
+	}
+	break;
+
+	case mxUINT8_CLASS:
+	{
+		uint8_ttt* bpData = (uint8_ttt*)pData;
+		snprintf(a_buffer, a_bufferLen, "%d", (int)(*bpData));
+	}
+	break;
+
+	case mxINT16_CLASS:
+	{
+		int16_ttt* bpData = (int16_ttt*)pData;
+		snprintf(a_buffer, a_bufferLen, "%d", (int)(*bpData));
+	}
+	break;
+
+	case mxUINT16_CLASS:
+	{
+		uint16_ttt* bpData = (uint16_ttt*)pData;
+		snprintf(a_buffer, a_bufferLen, "%d", (int)(*bpData));
+	}
+	break;
+
+	/*///////////////////////////////////////////////*/
+
+	case mxINT32_CLASS:
+	{
+		int32_ttt* bpData = (int32_ttt*)pData;
+		snprintf(a_buffer, a_bufferLen, "%d", (int)(*bpData));
+	}
+	break;
+
+	case mxUINT32_CLASS:
+	{
+		uint32_ttt* bpData = (uint32_ttt*)pData;
+		snprintf(a_buffer, a_bufferLen, "%u", (unsigned int)(*bpData));
+	}
+	break;
+
+	case mxINT64_CLASS:
+	{
+		int64_ttt* bpData = (int64_ttt*)pData;
+		snprintf(a_buffer, a_bufferLen, "%d", (int)(*bpData)); // To be corrected
+	}
+	break;
+
+	case mxUINT64_CLASS:
+	{
+		uint64_ttt* bpData = (uint64_ttt*)pData;
+		snprintf(a_buffer, a_bufferLen, "%d", (int)(*bpData)); // To be corrected
+	}
+	break;
+
+	default: return -4;
+	}
+
+	return 0;
+}
+
+#if 0
+int GetValue(int index, float*const& value)const;
+
+int GetValue(int index, bool*const& value)const;
+int GetValue(int index, int8_ttt*const& value)const;
+int GetValue(int index, uint8_ttt*const& value)const;
+int GetValue(int index, int16_ttt*const& value)const;
+int GetValue(int index, uint16_ttt*const& value)const;
+int GetValue(int index, int32_ttt*const& value)const;
+int GetValue(int index, uint32_ttt*const& value)const;
+int GetValue(int index, int64_ttt*const& value)const;
+int GetValue(int index, uint64_ttt*const& value)const;
+int GetValue(int index, char* buffer, int bufferLen)const
+#endif
 
 
 #endif  // #ifdef __cplusplus

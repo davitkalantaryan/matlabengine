@@ -35,6 +35,11 @@ EqFct* eq_create(int a_eq_code, void* a_arg)
 {
 	::EqFct* pRet = NULL;
 	//const char* cpcNameString;
+#ifdef WIN32
+	DEBUG_APP_RAW2(2, "Press any key to continue!");
+	DEBUG_APP_RAW0(2, getch);
+	DEBUG_APP_RAW2(2, "\n");
+#endif
 
 	switch (a_eq_code)
 	{

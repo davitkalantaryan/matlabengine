@@ -13,7 +13,6 @@
 #define __mat_matrix_tos__
 
 #ifdef use_mat_matrix
-
 #ifdef __cplusplus
 
 #ifndef __mat_matrix_h__
@@ -22,10 +21,115 @@
 #else
 #endif
 
+template <typename Type>
+int PersistantArgsGroup::GetValue(int a_index, Type*const& a_value)const
+{
+	mxClassID	classId;
+	void*		pData;
+
+	if (a_index >= m_nSize) { return -1; }
+	if (!m_ppArgs[a_index]) { return -2; }
+	classId = nwGetClassID(m_ppArgs[a_index]);
+	pData = nwGetData(m_ppArgs[a_index]);
+	if (!pData) { return -3; }
+
+	switch (classId)
+	{
+	case mxLOGICAL_CLASS:
+	{
+		bool* bpData = (bool*)pData;
+		*a_value = (Type)((*bpData) ? 1 : 0);
+	}
+	break;
+
+	case mxCHAR_CLASS:
+	{
+		char* bpData = (char*)pData;
+		*a_value = (Type)strtod(bpData, NULL);
+	}
+	break;
+
+	case mxDOUBLE_CLASS:
+	{
+		double* bpData = (double*)pData;
+		*a_value = (Type)(*bpData);
+	}
+	break;
+
+	case mxSINGLE_CLASS:
+	{
+		float* bpData = (float*)pData;
+		*a_value = (Type)(*bpData);
+	}
+	break;
+
+	case mxINT8_CLASS:
+	{
+		int8_ttt* bpData = (int8_ttt*)pData;
+		*a_value = (Type)(*bpData);
+	}
+	break;
+
+	case mxUINT8_CLASS:
+	{
+		uint8_ttt* bpData = (uint8_ttt*)pData;
+		*a_value = (Type)(*bpData);
+	}
+	break;
+
+	case mxINT16_CLASS:
+	{
+		int16_ttt* bpData = (int16_ttt*)pData;
+		*a_value = (Type)(*bpData);
+	}
+	break;
+
+	case mxUINT16_CLASS:
+	{
+		uint16_ttt* bpData = (uint16_ttt*)pData;
+		*a_value = (Type)(*bpData);
+	}
+	break;
+
+	/*///////////////////////////////////////////////*/
+
+	case mxINT32_CLASS:
+	{
+		int32_ttt* bpData = (int32_ttt*)pData;
+		*a_value = (Type)(*bpData);
+	}
+	break;
+
+	case mxUINT32_CLASS:
+	{
+		uint32_ttt* bpData = (uint32_ttt*)pData;
+		*a_value = (Type)(*bpData);
+	}
+	break;
+
+	case mxINT64_CLASS:
+	{
+		int64_ttt* bpData = (int64_ttt*)pData;
+		*a_value = (Type)(*bpData);
+	}
+	break;
+
+	case mxUINT64_CLASS:
+	{
+		uint64_ttt* bpData = (uint64_ttt*)pData;
+		*a_value = (Type)(*bpData);
+	}
+	break;
+
+	default: return -4;
+	}
+
+	return 0;
+}
+
 
 
 #endif  // #ifdef __cplusplus
-
 #endif  // #ifndef use_mat_matrix
 
 #endif  // #ifndef __mat_matrix_tos__

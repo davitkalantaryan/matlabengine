@@ -26,8 +26,9 @@ static volatile int s_nRun;
 
 int main(int a_argc, char* a_argv[])
 {
-	int nFork(1);
+	int nReturn,nFork(1);
     int nEngineNumber(0);
+	const char* cpcEngineCommand = "";
     common::argument_parser aParser;
 
     aParser.AddOption("--engine-number",1,"0");
@@ -38,9 +39,10 @@ int main(int a_argc, char* a_argv[])
 
     if(a_argc>1)
     {
-		//char** argv = 
+		char** argv = a_argv + 1;
         int nArgs(a_argc-1);
-        aParser.ParseCommandLine(nArgs,a_argv+1);
+        aParser.ParseCommandLine<int&,char*>(nArgs, argv);
+		if (nArgs) { cpcEngineCommand = argv[0]; }
     }
 
     if(aParser["--help"] || aParser["-h"]){
@@ -69,7 +71,7 @@ int main(int a_argc, char* a_argv[])
 
     //freopen( "/dev/null", "w", stderr);
     //freopen( "/dev/null", "w", stdout);
-	printf("fork=%d\n",nFork);
+	printf("fork=%d, engineNumber=%d, engineCommand=%s\n",nFork, nEngineNumber, cpcEngineCommand);
 
 	if (nFork)
 	{
@@ -89,7 +91,13 @@ int main(int a_argc, char* a_argv[])
 	}
 
     matlab::engine::ServerTcpEng aServer;
-    aServer.StartMServer(nEngineNumber);
+	nReturn = aServer.StartMServer(nEngineNumber, cpcEngineCommand);
+
+	if (nReturn) {
+		fprintf(stderr,"EngineNumber=%d, Unable to bind to the port!\n", nEngineNumber);
+		goto returnPoint;
+	}
+
     s_nRun = 1;
 
     while(s_nRun){
@@ -97,9 +105,10 @@ int main(int a_argc, char* a_argv[])
         Sleep(100000);
     }
 
+returnPoint:
     aServer.StopMServer();
 
-    return 0;
+    return nReturn;
 }
 
 

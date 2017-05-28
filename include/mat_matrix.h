@@ -122,6 +122,11 @@ public:
 	int SetValue(int index, const uint64_ttt& value);
 	int SetValue(int index, const nwTypeChar& value);
 
+	/*///////////////////////////////////////////////*/
+	template <typename Type>
+	int GetValue(int index, Type*const& value)const;
+	int GetValue(int index, char* buffer,int bufferLen)const;
+
 private:
 	int			m_nSize;
 	nwArray**	m_ppArgs;

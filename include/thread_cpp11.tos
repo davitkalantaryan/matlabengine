@@ -36,7 +36,7 @@ template <typename TClass>
 STD::thread::thread(void (TClass::*a_fpClbK)(),TClass* a_owner)
 {
     InitAllMembersPrivate();
-    ConstructThreadVoid((TypeClbKVoid)GetFuncPointer_common(0,a_fpClbK),(void*)a_owner);
+    ConstructThreadVoidPtr((TypeClbKVoidPtr)GetFuncPointer_common(0,a_fpClbK),(void*)a_owner);
 }
 
 
@@ -45,7 +45,7 @@ STD::thread::thread(void (TClass::*a_fpClbK)(TArg aa_arg),TClass* a_owner,TArg a
 {
     SArgs1<TClass,TArg>* pArgs = new SArgs1<TClass,TArg>(a_fpClbK,a_owner,a_arg);
     InitAllMembersPrivate();
-    ConstructThreadVoid(ThreadFunctionWithArg<TClass,TArg>,(void*)pArgs);
+    ConstructThreadVoidPtr(ThreadFunctionWithArg<TClass,TArg>,(void*)pArgs);
 }
 
 /*///////////////////////////////////////////////////////////////////////////*/

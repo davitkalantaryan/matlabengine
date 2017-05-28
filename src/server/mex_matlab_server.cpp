@@ -72,7 +72,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 			return;
 		}
 		double* plfEngNumber = mxGetPr(a_Inputs[0]);
-		if (s_serverTcp.StartMServer((int)(*plfEngNumber)))
+		if (s_serverTcp.StartMServer((int)(*plfEngNumber)," "))
 		{
 			mexPrintf("Unable to start MATLAB server!\n");
 			return;

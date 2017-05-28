@@ -37,13 +37,15 @@ typedef ::pthread_t thread_native_handle;
 typedef void* SYSTHRRETTYPE;
 #endif
 
-typedef void (__THISCALL__ * TypeClbKVoid)(void*owner);
+typedef void (__THISCALL__ * TypeClbKVoidPtr)(void*owner);
+typedef void (__THISCALL__ * TypeClbKVoid2)(void);
 
 class thread
 {
 public:
     thread();
-    thread(TypeClbKVoid func,void* arg);
+    thread(TypeClbKVoid2 func);
+    thread(TypeClbKVoidPtr func,void* arg);
     template<typename TClass>
     thread(void (TClass::*a_fpClbK)(),TClass* a_owner);
     template<typename TClass,typename TArg>
@@ -56,7 +58,8 @@ public:
     bool joinable() const;
 
 private:
-    void ConstructThreadVoid(TypeClbKVoid func,void* arg);
+    void ConstructThreadVoidPtr(TypeClbKVoidPtr func,void* arg);
+    void ConstructThreadVoid(TypeClbKVoid2 func);
     void InitAllMembersPrivate();
 
 protected:

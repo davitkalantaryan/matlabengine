@@ -31,7 +31,7 @@ public:
     MatHandleEng();
     virtual ~MatHandleEng();
 
-    virtual int Start() __OVERRIDE__ ;
+    virtual int Start(const std::string& engineCommand) __OVERRIDE__ ;
     virtual void Stop() __OVERRIDE__;
 
 	mxArray* newGetVariable(const char* workspace, const char* name) __OVERRIDE__;
@@ -58,6 +58,7 @@ private:
     volatile int                    m_nRun;
     volatile int                    m_nReturn;
     common::FifoFast<SLsnCallbackItem*, 8>	m_fifoJobs;
+	std::string						m_strEngineCommand;
 };
 
 }}
