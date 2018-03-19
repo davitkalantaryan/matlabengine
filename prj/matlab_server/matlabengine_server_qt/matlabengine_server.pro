@@ -12,9 +12,9 @@ INCLUDEPATH += ../../../include
 
 #QMAKE_CXXFLAGS += -std=c++11
 #QMAKE_CXXFLAGS += -std=c++0x
-QMAKE_CC = /opt/rh/devtoolset-4/root/usr/bin/gcc
-QMAKE_CXX = /opt/rh/devtoolset-4/root/usr/bin/g++
-QMAKE_LINK = /opt/rh/devtoolset-4/root/usr/bin/g++
+#QMAKE_CC = /opt/rh/devtoolset-4/root/usr/bin/gcc
+#QMAKE_CXX = /opt/rh/devtoolset-4/root/usr/bin/g++
+#QMAKE_LINK = /opt/rh/devtoolset-4/root/usr/bin/g++
 #CONFIG += c++11
 
 # message("includepath=$$INCLUDEPATH")

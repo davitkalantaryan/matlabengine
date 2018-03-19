@@ -5,8 +5,8 @@
     <WinTargetPlatformVersion>8.1</WinTargetPlatformVersion>
     <TargetCompilerName>x86</TargetCompilerName>
     <TargetFolderBase>win32</TargetFolderBase>
-    <MatlabIncludeDir>V:\x86_win32\lib\include\matlab</MatlabIncludeDir>
-    <MatlabLibDir>V:\x86_win32\lib</MatlabLibDir>
+    <MatlabIncludeDir>..\..\..\contrib\matlab\sys\win32\lib\include</MatlabIncludeDir>
+    <MatlabLibDir>..\..\..\contrib\matlab\sys\$(TargetFolderBase)\lib</MatlabLibDir>
     <MexExtension>mexw32</MexExtension>
   </PropertyGroup>
   <PropertyGroup />

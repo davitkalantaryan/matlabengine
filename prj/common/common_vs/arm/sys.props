@@ -5,8 +5,8 @@
     <WinTargetPlatformVersion>10.0.15063.0</WinTargetPlatformVersion>
     <TargetCompilerName>arm</TargetCompilerName>
     <TargetFolderBase>arm_win</TargetFolderBase>
-    <MatlabIncludeDir>V:\arm_win\lib\include\matlab</MatlabIncludeDir>
-    <MatlabLibDir>V:\arm_win\lib\false</MatlabLibDir>
+    <MatlabIncludeDir>..\..\..\contrib\matlab\include</MatlabIncludeDir>
+    <MatlabLibDir>..\..\..\contrib\matlab\sys\$(TargetFolderBase)\lib</MatlabLibDir>
     <MexExtension>mexw32</MexExtension>
   </PropertyGroup>
   <PropertyGroup />

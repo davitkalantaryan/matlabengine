@@ -10,6 +10,7 @@
 #define NO_RECEIVE	-10
 
 #include <mex.h>
+#include <matrix.h>
 #include <string.h>
 #include <malloc.h>
 #include "matlab_engine_serializer.hpp"

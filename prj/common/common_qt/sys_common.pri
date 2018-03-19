@@ -14,7 +14,7 @@ QMAKE_CXXFLAGS_WARN_ON -= -Wunused-function
 #options = $$find(CONFIG, "TEST")
 #count(options, 1)
 
-DEEPNESS = ../../..
+DEEPNESS = ../../../..
 
 equals(TARGET_EXT,"mexa64"):TARGET_PATH=mbin
 else {

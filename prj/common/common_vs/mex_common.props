@@ -16,7 +16,7 @@
       <ModuleDefinitionFile>..\..\..\src\modulefiles\modulemex1.def</ModuleDefinitionFile>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\contrib\matlab\sys\$(TargetFolderBase)\lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MatlabIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
