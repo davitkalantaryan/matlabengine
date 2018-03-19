@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\common\aservertcp.cpp" />
+    <ClCompile Include="..\..\..\src\common\asocketb.cpp" />
+    <ClCompile Include="..\..\..\src\common\asockettcp.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_argument_parser.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_functionalities.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_serializer.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_socketbase.cpp" />
+    <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_matundoc.cpp" />
+    <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_raw1.cpp" />
+    <ClCompile Include="..\..\..\src\server\main_matlab_engine_server.cpp" />
+    <ClCompile Include="..\..\..\src\server\matlab_engine_serverbase.cpp" />
+    <ClCompile Include="..\..\..\src\server\matlab_engine_servertcpbase.cpp" />
+    <ClCompile Include="..\..\..\src\server\matlab_engine_servertcpeng.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlebase.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_mathandleeng.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_serializer.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_serializer_versioning.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_pipe_name.cpp" />
+    <ClCompile Include="..\..\..\..\.aallfiles.2017.01.26\sources2\fts_server.cpp">
+      <Filter>sevagir</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\aservertcp.h" />
+    <ClInclude Include="..\..\..\include\asocketb.h" />
+    <ClInclude Include="..\..\..\include\asockettcp.h" />
+    <ClInclude Include="..\..\..\include\common_argument_parser.hpp" />
+    <ClInclude Include="..\..\..\include\common_defination.h" />
+    <ClInclude Include="..\..\..\include\common_fifofast.hpp" />
+    <ClInclude Include="..\..\..\include\common_serializer.hpp" />
+    <ClInclude Include="..\..\..\include\common_socketbase.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_engine_mathandlebase.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_engine_mathandleeng.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_engine_serializer.hpp" />
+    <ClInclude Include="..\..\..\include\stdafx.h" />
+    <ClInclude Include="..\..\..\src\server\matlab_engine_serverbase.hpp" />
+    <ClInclude Include="..\..\..\src\server\matlab_engine_servertcpbase.hpp" />
+    <ClInclude Include="..\..\..\src\server\matlab_engine_servertcpeng.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\include\common_argument_parser.tos" />
+    <None Include="..\..\..\include\common_fifofast.tos" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="sevagir">
+      <UniqueIdentifier>{f13786d1-d9c7-47d3-81de-96139227aca7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

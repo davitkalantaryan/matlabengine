@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <WinTargetPlatformVersion>10.0.15063.0</WinTargetPlatformVersion>
+    <TargetCompilerName>arm</TargetCompilerName>
+    <TargetFolderBase>arm_win</TargetFolderBase>
+    <MatlabIncludeDir>V:\arm_win\lib\include\matlab</MatlabIncludeDir>
+    <MatlabLibDir>V:\arm_win\lib\false</MatlabLibDir>
+    <MexExtension>mexw32</MexExtension>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemDefinitionGroup />
+  <ItemGroup>
+    <BuildMacro Include="WinTargetPlatformVersion">
+      <Value>$(WinTargetPlatformVersion)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="TargetCompilerName">
+      <Value>$(TargetCompilerName)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="TargetFolderBase">
+      <Value>$(TargetFolderBase)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="MatlabIncludeDir">
+      <Value>$(MatlabIncludeDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="MatlabLibDir">
+      <Value>$(MatlabLibDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="MexExtension">
+      <Value>$(MexExtension)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
