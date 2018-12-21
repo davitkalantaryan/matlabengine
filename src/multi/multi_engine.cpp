@@ -200,10 +200,12 @@ void multi::CEngine::runFunctionInEngineThread(EngineTask* a_pTask)
 	}
 
 	engEvalString(m_pEngine, vcEvalStringBuffer);
+	mxClassID nVal;
 
 	for (i = 0; i < a_pTask->numberOfOutputs; ++i) {
 		GenerateInputOrOutName(a_pTask->taskNumber, i, false, argumentName);
 		(a_pTask->outputs)[i]=engGetVariable(m_pEngine, argumentName);
+		nVal = mxGetClassID((a_pTask->outputs)[i]);
 	}
 
 	m_nLastFinishedtaskNumber = (uint64_t)a_pTask->taskNumber;
@@ -279,8 +281,9 @@ multi::CEngine::EngineTask::EngineTask(
 
 	if(a_nNumOuts >0){
 		//this->outputs = (PtrMxArray*)malloc(a_nNumOuts*sizeof(mxArray*));
-		this->outputs = new PtrMxArray[a_nNumOuts];
+		this->outputs = new PtrMxArray[a_nNumOuts+1];
 		HANDLE_MEM_DEF(this->outputs);
+		this->outputs[a_nNumOuts] = NULL;
 	}
 
 

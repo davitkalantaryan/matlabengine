@@ -107,7 +107,9 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 			//memset(pTask->outputs, 0,sizeof(mxArray*)*nOutToGet);
 			for(i=0;i<nOutToGet;++i){
 				//a_Outputs[i] = mxDuplicateArray(pTask->outputs[i]);
-				a_Outputs[i] = pTask->outputs[i];
+				//a_Outputs[i] = pTask->outputs[i];
+				//mexPrintf("type")
+				mxDestroyArray(pTask->outputs[i]);
 			}
 		}
 		else if ((strcmp(pcOptionOrFunctionName, "--set-number-of-engines") == 0)||(strcmp(pcOptionOrFunctionName, "-sen") == 0)) {
