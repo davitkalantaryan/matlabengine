@@ -1,0 +1,3 @@
+[submodule "contrib/matlab"]
+	path = contrib/matlab
+	url = https://github.com/davitkalantaryan/matlabdev.git
