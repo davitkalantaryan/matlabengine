@@ -210,6 +210,7 @@
     <ClCompile Include="..\..\..\src\multi\multi_engine.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\src\multi\impl.multi_engine.hpp" />
     <ClInclude Include="..\..\..\src\multi\multi_engine.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -26,5 +26,8 @@
     <ClInclude Include="..\..\..\src\multi\multi_engine.hpp">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\multi\impl.multi_engine.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

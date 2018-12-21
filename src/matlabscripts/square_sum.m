@@ -2,18 +2,17 @@ function [ ret1 ] = square_sum(vectorArgs)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
-nLength = length(vectorArgs);
+nLengthMin1 = length(vectorArgs)-1;
 
-ret1=multiengine(@testcallback1,nLength,'--replace-by-index',vectorArgs);
+ret1=multiengine(@testcallback1,nLengthMin1+1,'--replace-by-index',vectorArgs);
 if (isempty(ret1))
-    disp('empty');
     ret1=0;
 end
 
-disp(nLength);
+fprintf('length=%d\n',nLengthMin1+1);
 
-for p1=1:nLength
-    retByEngine=multiengine('--last-output-from-engine',p1);
+for p1=0:nLengthMin1
+    retByEngine=multiengine('--output-from-engine',p1);
     ret1 = ret1 + retByEngine;
 end
 
