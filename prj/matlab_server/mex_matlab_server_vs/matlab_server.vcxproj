@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|ARM">
       <Configuration>Debug</Configuration>
@@ -27,49 +27,48 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{2770B623-53C1-456F-8CCB-5E8DD7F7E6F6}</ProjectGuid>
+    <ProjectGuid>{C1BB5A82-1D0F-41CF-A5F4-12A5CE81BDAA}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>matlab_engine_server</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
-    <ProjectName>matlabengine_server</ProjectName>
+    <RootNamespace>matlab_server</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -99,32 +98,36 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\..\..\sys\win32\bin\</OutDir>
+    <OutDir>..\..\..\..\sys\win32\mbin\</OutDir>
     <IntDir>..\..\..\sys\win32\.objects\$(ProjectName)\</IntDir>
+    <TargetExt>.mexw32</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\..\..\sys\win64\bin\</OutDir>
+    <OutDir>..\..\..\..\sys\win64\mbin\</OutDir>
     <IntDir>..\..\..\sys\win64\.objects\$(ProjectName)\</IntDir>
+    <TargetExt>.mexw64</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\..\..\sys\rasp_win\bin\</OutDir>
+    <OutDir>..\..\..\..\sys\rasp_win\mbin\</OutDir>
     <IntDir>..\..\..\sys\rasp_win\.objects\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\..\sys\win32\bin\</OutDir>
+    <OutDir>..\..\..\..\sys\win32\mbin\</OutDir>
     <IntDir>..\..\..\sys\win32\.objects\$(ProjectName)\</IntDir>
+    <TargetExt>.mexw32</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\..\sys\win64\bin\</OutDir>
+    <OutDir>..\..\..\..\sys\win64\mbin\</OutDir>
     <IntDir>..\..\..\sys\win64\.objects\$(ProjectName)\</IntDir>
+    <TargetExt>.mexw64</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\..\sys\rasp_win\bin\</OutDir>
+    <OutDir>..\..\..\..\sys\rasp_win\mbin\</OutDir>
     <IntDir>..\..\..\sys\rasp_win\.objects\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -133,14 +136,16 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;DEVELOPMENT;WIN32;_DEBUG;_WINDOWS;_USRDLL;MATLAB_SERVER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../../include;V:\x86_win32\lib\include\matlab</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>User32.lib;libmx.lib;libmex.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>V:\x86_win32\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>User32.lib;libmx.lib;libeng.lib</AdditionalDependencies>
+      <ModuleDefinitionFile>../../../src/deffiles/modulemex1.def</ModuleDefinitionFile>
+      <ImportLibrary />
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -149,14 +154,16 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;DEVELOPMENT;_DEBUG;_WINDOWS;_USRDLL;MATLAB_SERVER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../../include;C:\Program Files\Matlab\R2011a\extern\include;C:\Program Files\Matlab\R2016a\extern\include;C:\Program Files\Matlab\R2011b\extern\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>User32.lib;libmx.lib;libmex.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Program Files\Matlab\R2016a\extern\lib\win64\microsoft;C:\Program Files\Matlab\R2011b\extern\lib\win64\microsoft</AdditionalLibraryDirectories>
-      <AdditionalDependencies>User32.lib;libmx.lib;libeng.lib</AdditionalDependencies>
+      <ModuleDefinitionFile>../../../src/deffiles/modulemex1.def</ModuleDefinitionFile>
+      <ImportLibrary />
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -165,13 +172,15 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../../include;C:\Program Files\Matlab\R2011a\extern\include;C:\Program Files\Matlab\R2016a\extern\include;C:\Program Files\Matlab\R2011b\extern\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;DEVELOPMENT;_DEBUG;_WINDOWS;_USRDLL;MATLAB_SERVER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>User32.lib;libmx.lib;libeng.lib</AdditionalDependencies>
+      <AdditionalDependencies>User32.lib;libmx.lib;libmex.lib</AdditionalDependencies>
+      <ModuleDefinitionFile>../../../src/deffiles/modulemex1.def</ModuleDefinitionFile>
+      <ImportLibrary />
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -182,16 +191,18 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;WIN32;NDEBUG;_WINDOWS;_USRDLL;MATLAB_SERVER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../../include;V:\x86_win32\lib\include\matlab</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>User32.lib;libmx.lib;libmex.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>V:\x86_win32\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>User32.lib;libmx.lib;libeng.lib</AdditionalDependencies>
+      <ModuleDefinitionFile>../../../src/deffiles/modulemex1.def</ModuleDefinitionFile>
+      <ImportLibrary />
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -202,16 +213,18 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;NDEBUG;_WINDOWS;_USRDLL;MATLAB_SERVER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../../include;C:\Program Files\Matlab\R2011a\extern\include;C:\Program Files\Matlab\R2016a\extern\include;C:\Program Files\Matlab\R2011b\extern\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>User32.lib;libmx.lib;libmex.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Program Files\Matlab\R2016a\extern\lib\win64\microsoft;C:\Program Files\Matlab\R2011b\extern\lib\win64\microsoft</AdditionalLibraryDirectories>
-      <AdditionalDependencies>User32.lib;libmx.lib;libeng.lib</AdditionalDependencies>
+      <ModuleDefinitionFile>../../../src/deffiles/modulemex1.def</ModuleDefinitionFile>
+      <ImportLibrary />
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -222,19 +235,38 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../../../include;C:\Program Files\Matlab\R2011a\extern\include;C:\Program Files\Matlab\R2016a\extern\include;C:\Program Files\Matlab\R2011b\extern\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>SOCKT_SRC_USAGE;WIN32;NDEBUG;_WINDOWS;_USRDLL;MATLAB_SERVER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../../include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>User32.lib;libmx.lib;libeng.lib</AdditionalDependencies>
+      <AdditionalDependencies>User32.lib;libmx.lib;libmex.lib</AdditionalDependencies>
+      <ModuleDefinitionFile>../../../src/deffiles/modulemex1.def</ModuleDefinitionFile>
+      <ImportLibrary />
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\.aallfiles.2017.01.26\sources2\fts_server.cpp">
+    <ClCompile Include="..\..\..\src\common\aservertcp.cpp" />
+    <ClCompile Include="..\..\..\src\common\asocketb.cpp" />
+    <ClCompile Include="..\..\..\src\common\asockettcp.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_functionalities.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_serializer.cpp" />
+    <ClCompile Include="..\..\..\src\common\common_socketbase.cpp" />
+    <ClCompile Include="..\..\..\src\common\listener_on_gui_thread_win.cpp" />
+    <ClCompile Include="..\..\..\src\common\namedpipebase.cpp" />
+    <ClCompile Include="..\..\..\src\common\namedpipeserver.cpp" />
+    <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_matundoc.cpp" />
+    <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_raw1.cpp" />
+    <ClCompile Include="..\..\..\src\server\matlab_engine_serverbase.cpp" />
+    <ClCompile Include="..\..\..\src\server\matlab_engine_servertcpbase.cpp" />
+    <ClCompile Include="..\..\..\src\server\matlab_engine_servertcpmex.cpp" />
+    <ClCompile Include="..\..\..\src\server\mex_matlab_server.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_bytestream_routines.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlebase.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_mathandleeng.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
@@ -242,21 +274,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\common\aservertcp.cpp" />
-    <ClCompile Include="..\..\..\src\common\asocketb.cpp" />
-    <ClCompile Include="..\..\..\src\common\asockettcp.cpp" />
-    <ClCompile Include="..\..\..\src\common\common_argument_parser.cpp" />
-    <ClCompile Include="..\..\..\src\common\common_functionalities.cpp" />
-    <ClCompile Include="..\..\..\src\common\common_serializer.cpp" />
-    <ClCompile Include="..\..\..\src\common\common_socketbase.cpp" />
-    <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_matundoc.cpp" />
-    <ClCompile Include="..\..\..\src\seri_versions\matlab_engine_serializer_version5_raw1.cpp" />
-    <ClCompile Include="..\..\..\src\server\main_matlab_engine_server.cpp" />
-    <ClCompile Include="..\..\..\src\server\matlab_engine_serverbase.cpp" />
-    <ClCompile Include="..\..\..\src\server\matlab_engine_servertcpbase.cpp" />
-    <ClCompile Include="..\..\..\src\server\matlab_engine_servertcpeng.cpp" />
-    <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlebase.cpp" />
-    <ClCompile Include="..\..\..\src\util\matlab_engine_mathandleeng.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlemex.cpp" />
+    <ClCompile Include="..\..\..\src\util\matlab_engine_mathandlemexbase.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_serializer.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_engine_serializer_versioning.cpp" />
     <ClCompile Include="..\..\..\src\util\matlab_pipe_name.cpp" />
@@ -265,21 +284,37 @@
     <ClInclude Include="..\..\..\include\aservertcp.h" />
     <ClInclude Include="..\..\..\include\asocketb.h" />
     <ClInclude Include="..\..\..\include\asockettcp.h" />
-    <ClInclude Include="..\..\..\include\common_argument_parser.hpp" />
     <ClInclude Include="..\..\..\include\common_defination.h" />
     <ClInclude Include="..\..\..\include\common_fifofast.hpp" />
     <ClInclude Include="..\..\..\include\common_serializer.hpp" />
     <ClInclude Include="..\..\..\include\common_socketbase.hpp" />
+    <ClInclude Include="..\..\..\include\common_unnamedsemaphorelite.hpp" />
+    <ClInclude Include="..\..\..\include\listener_on_gui_thread.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_bytestream_routines.h" />
     <ClInclude Include="..\..\..\include\matlab_engine_mathandlebase.hpp" />
-    <ClInclude Include="..\..\..\include\matlab_engine_mathandleeng.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_engine_mathandleeng.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\matlab_engine_mathandlemex.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_engine_mathandlemexbase.hpp" />
     <ClInclude Include="..\..\..\include\matlab_engine_serializer.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_engine_serializer_versioning.hpp" />
+    <ClInclude Include="..\..\..\include\matlab_pipe_name.h" />
+    <ClInclude Include="..\..\..\include\mutex_cpp11.hpp" />
+    <ClInclude Include="..\..\..\include\namedpipebase.h" />
+    <ClInclude Include="..\..\..\include\namedpipeserver.h" />
     <ClInclude Include="..\..\..\include\stdafx.h" />
+    <ClInclude Include="..\..\..\include\thread_cpp11.hpp" />
     <ClInclude Include="..\..\..\src\server\matlab_engine_serverbase.hpp" />
     <ClInclude Include="..\..\..\src\server\matlab_engine_servertcpbase.hpp" />
-    <ClInclude Include="..\..\..\src\server\matlab_engine_servertcpeng.hpp" />
+    <ClInclude Include="..\..\..\src\server\matlab_engine_servertcpmex.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\include\common_argument_parser.tos" />
     <None Include="..\..\..\include\common_fifofast.tos" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
