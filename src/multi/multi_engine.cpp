@@ -30,11 +30,14 @@ multi::CEngine::CEngine(int a_nEngineNumber)
 {
 	m_nLastFinishedtaskNumber=m_isEngineRunning=m_isError=m_shouldRun = m_isStarted = 0;
 	m_nEngineNumber = (uint64_t)a_nEngineNumber;
+
+	StartEngine();
 }
 
 
 multi::CEngine::~CEngine()
 {
+	StopEngine();
 	while(m_listAllTasks.first()){
 		delete m_listAllTasks.first()->data;
 		m_listAllTasks.RemoveData(m_listAllTasks.first());
@@ -99,9 +102,45 @@ void multi::CEngine::StopEngine()
 }
 
 
+#ifdef _WIN32
+#define MS_VC_EXCEPTION 0x406d1388
+typedef struct tagTHREADNAME_INFO
+{
+	DWORD dwType;        // must be 0x1000
+	LPCSTR szName;       // pointer to name (in same addr space)
+	DWORD dwThreadID;    // thread ID (-1 caller thread)
+	DWORD dwFlags;       // reserved for future use, most be zero
+} THREADNAME_INFO;
+#else
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE             /* See feature_test_macros(7) */
+#endif
+#include <pthread.h>
+#endif
+
+
 void multi::CEngine::EngineThread()
 {
 	EngineTask* pTask;
+
+#ifdef _WIN32
+	THREADNAME_INFO info;
+	info.dwType = 0x1000;
+	info.szName = "multi::CEngine::EngineThread";
+	//info.dwThreadID = GetThreadId(a_target_thread->thrd);
+	info.dwThreadID = GetCurrentThreadId();
+	info.dwFlags = 0;
+
+	__try {
+		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (CONST ULONG_PTR*)&info);
+	}
+	__except (EXCEPTION_CONTINUE_EXECUTION) {
+	}
+	//return 0;
+#else
+	pthread_t curThread = pthread_self();
+	pthread_setname_np(&curThread, "multi::CEngine::EngineThread");
+#endif
 
 	m_pEngine = engOpen(NULL);
 	if(!m_pEngine){m_isError=1;return;}
@@ -146,16 +185,16 @@ void multi::CEngine::runFunctionInEngineThread(EngineTask* a_pTask)
 
 	if(a_pTask ->numberOfInputs>0){
 		GenerateInputOrOutName(a_pTask->taskNumber, 0, true, argumentName);
-		nOffset = snprintf(vcEvalStringBuffer + nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1 - nOffset, "(%s", argumentName);
-		engPutVariable(m_pEngine, argumentName,(a_pTask->inputsOrOutputs)[0]);
-		mxDestroyArray((a_pTask->inputsOrOutputs)[i]);
-		(a_pTask->inputsOrOutputs)[i] = NULL;
+		nOffset += snprintf(vcEvalStringBuffer + nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1 - nOffset, "(%s", argumentName);
+		engPutVariable(m_pEngine, argumentName,(a_pTask->inputs)[0]);
+		//mxDestroyArray((a_pTask->inputsOrOutputs)[i]);
+		//(a_pTask->inputsOrOutputs)[i] = NULL;
 		for (i = 1; i < a_pTask->numberOfInputs; ++i) {
 			GenerateInputOrOutName(a_pTask->taskNumber, i, true, argumentName);
 			nOffset += snprintf(vcEvalStringBuffer+nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1-nOffset,",%s",argumentName);
-			engPutVariable(m_pEngine, argumentName,(a_pTask->inputsOrOutputs)[i]);
-			mxDestroyArray((a_pTask->inputsOrOutputs)[i]);
-			(a_pTask->inputsOrOutputs)[i]=NULL;
+			engPutVariable(m_pEngine, argumentName,(a_pTask->inputs)[i]);
+			//mxDestroyArray((a_pTask->inputsOrOutputs)[i]);
+			//(a_pTask->inputsOrOutputs)[i]=NULL;
 		}
 		nOffset += snprintf(vcEvalStringBuffer + nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1 - nOffset, ");");
 	}
@@ -164,7 +203,7 @@ void multi::CEngine::runFunctionInEngineThread(EngineTask* a_pTask)
 
 	for (i = 0; i < a_pTask->numberOfOutputs; ++i) {
 		GenerateInputOrOutName(a_pTask->taskNumber, i, false, argumentName);
-		(a_pTask->inputsOrOutputs)[i]=engGetVariable(m_pEngine, argumentName);
+		(a_pTask->outputs)[i]=engGetVariable(m_pEngine, argumentName);
 	}
 
 	m_nLastFinishedtaskNumber = (uint64_t)a_pTask->taskNumber;
@@ -174,9 +213,9 @@ void multi::CEngine::runFunctionInEngineThread(EngineTask* a_pTask)
 
 
 
-void multi::CEngine::addFunction(int a_nTaskNumber,const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform)
+void multi::CEngine::addFunction(int a_nTaskNumber,const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform, int a_nIndex)
 {
-	EngineTask* pNewTask = new EngineTask(a_nTaskNumber,a_functionName,a_nNumOuts,a_nNumInps,a_Inputs, a_pSemaToInform);  // new will  throw exception
+	EngineTask* pNewTask = new EngineTask(a_nTaskNumber,a_functionName,a_nNumOuts,a_nNumInps,a_Inputs, a_pSemaToInform, a_nIndex);  // new will  throw exception
 	m_pLastTask = pNewTask;
 	m_hashTasks.AddEntry(&a_nTaskNumber,4, pNewTask);
 	m_fifoTasks.AddElement(pNewTask);
@@ -185,10 +224,10 @@ void multi::CEngine::addFunction(int a_nTaskNumber,const char* a_functionName, i
 }
 
 
-bool multi::CEngine::addFunctionIfFree(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform)
+bool multi::CEngine::addFunctionIfFree(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform, int a_nIndex)
 {
 	if(!m_isEngineRunning){
-		addFunction(a_nTaskNumber,a_functionName,a_nNumOuts,a_nNumInps,a_Inputs, a_pSemaToInform);
+		addFunction(a_nTaskNumber,a_functionName,a_nNumOuts,a_nNumInps,a_Inputs, a_pSemaToInform, a_nIndex);
 		return true;
 	}
 	return false;
@@ -216,27 +255,51 @@ void multi::CEngine::DeleteLastTask()
 }
 
 
+#define REPLACE_BY_INDEX		"--replace-by-index"
+
 
 /*///////////////////////////////////////////////////////////////////////////////////////////////////////*/
-multi::CEngine::EngineTask::EngineTask(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform)
+multi::CEngine::EngineTask::EngineTask(
+	int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, 
+	const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform, int a_nIndex)
 	:
 	taskNumber(a_nTaskNumber),
 	numberOfOutputs(a_nNumOuts),
 	numberOfInputs(a_nNumInps),
-	funcName(a_functionName),
-	arraySize(a_nNumInps>a_nNumOuts?a_nNumInps:a_nNumOuts)
+	funcName(a_functionName)
 {
+	static const size_t  scunReplaceStrLengthPlus1(strlen(REPLACE_BY_INDEX)+1);
+	char vcPossibleReplaceBuffer[128];
+	this->index = (uint64_t)a_nIndex;
 	this->pSemaToInform = a_pSemaToInform;
 	this->itemForIteration = NULL;
 	this->taskStatus = multi::CEngine::TaskStatus::Stopped;
-	this->inputsOrOutputs = NULL;
+	this->outputs = NULL;
+	this->inputs = NULL;
 
-	if(arraySize>0){
-		this->inputsOrOutputs = (mxArray**)calloc(arraySize,sizeof(mxArray*));
-		HANDLE_MEM_DEF(this->inputsOrOutputs);
+	if(a_nNumOuts >0){
+		//this->outputs = (PtrMxArray*)malloc(a_nNumOuts*sizeof(mxArray*));
+		this->outputs = new PtrMxArray[a_nNumOuts];
+		HANDLE_MEM_DEF(this->outputs);
+	}
+
+
+	if(a_nNumInps >0){
+		//this->inputs = (mxArray**)calloc(a_nNumInps,sizeof(mxArray*));
+		this->inputs = new PtrMxArray[a_nNumInps];
+		HANDLE_MEM_DEF(this->inputs);
 		for(int i(0);i<a_nNumInps;++i){
-			(this->inputsOrOutputs)[i]= mxDuplicateArray(a_Inputs[i]);
-			HANDLE_MEM_DEF((this->inputsOrOutputs)[i]);
+			if(mxIsChar(a_Inputs[i])){
+				mxGetString(a_Inputs[i], vcPossibleReplaceBuffer,scunReplaceStrLengthPlus1);
+				if(strncmp(vcPossibleReplaceBuffer,REPLACE_BY_INDEX, scunReplaceStrLengthPlus1)==0){
+					(this->inputs)[i] = mxCreateNumericMatrix(1,1,mxUINT32_CLASS, mxREAL);
+					HANDLE_MEM_DEF((this->inputs)[i]);
+					*( (uint32_t*)mxGetData( (this->inputs)[i]) ) = (uint32_t)a_nIndex+1;
+					continue;
+				}
+			}
+			(this->inputs)[i]= mxDuplicateArray(a_Inputs[i]);
+			HANDLE_MEM_DEF((this->inputs)[i]);
 		}
 	}
 
@@ -246,11 +309,22 @@ multi::CEngine::EngineTask::EngineTask(int a_nTaskNumber, const char* a_function
 
 multi::CEngine::EngineTask::~EngineTask()
 {
-	for (int i(0); i < this->arraySize; ++i) {
-		if(this->inputsOrOutputs[i]){
-			mxDestroyArray(this->inputsOrOutputs[i]);
+	//int i;
+#if 0
+	for (i=0; i < this->numberOfInputs; ++i) {
+		if(this->inputs[i]){
+			mxDestroyArray(this->inputs[i]);
 		}
 	}
+
+
+	for (i = 0; i < this->numberOfOutputs; ++i) {
+		if (this->outputs[i]) {
+			mxDestroyArray(this->outputs[i]);
+		}
+	}
+
+#endif
 }
 
 

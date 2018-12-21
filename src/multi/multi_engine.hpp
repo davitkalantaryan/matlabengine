@@ -18,6 +18,7 @@ namespace multi {
 
 class CEngine
 {
+	typedef mxArray* PtrMxArray;
 public:
 	class EngineTask;
 	struct TaskStatus{enum Type{Stopped,Running};};
@@ -26,10 +27,8 @@ public:
 
 	int					lastFinishedTask()const;
 	int					number()const;
-	int					StartEngine();
-	void				StopEngine();
-	void				addFunction(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform);
-	bool				addFunctionIfFree(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform);
+	void				addFunction(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform, int a_nIndex);
+	bool				addFunctionIfFree(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform, int a_nIndex);
 	TaskStatus::Type	taskStatus()const;
 	const EngineTask*	getTask(int a_nTaskNumber)const;
 	const EngineTask*	getLastTask()const;
@@ -41,6 +40,9 @@ protected:
 	void				EngineThread();
 	void				runFunctionInEngineThread(EngineTask*);
 
+	int					StartEngine();
+	void				StopEngine();
+
 public:
 	class EngineTask 
 	{
@@ -48,16 +50,17 @@ public:
 		int										taskNumber;
 		int										numberOfOutputs;
 		int										numberOfInputs;
-		int										arraySize; // max(numberOfOutputs,numberOfInputs)
 		::std::string							funcName;
-		mxArray**								inputsOrOutputs;
+		PtrMxArray*								outputs;
+		PtrMxArray*								inputs;
 		int64_t									taskStatus : 3;
 		int64_t									isFncNameProvided : 1;
+		int64_t									index : 20;
 		::common::listN::ListItem<EngineTask*>*	itemForIteration;
 	private:
 		friend class CEngine;
 		::common::UnnamedSemaphoreLite*	pSemaToInform;
-		EngineTask(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSema);
+		EngineTask(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSema, int a_nIndex);
 		~EngineTask();
 	};
 

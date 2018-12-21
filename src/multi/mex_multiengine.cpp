@@ -24,11 +24,12 @@ static int										s_nTaskNumber = 0;
 static int										s_nInited = 0;
 static ::common::HashTbl<::multi::CEngine*>		s_hashEngines;
 static ::common::List<::multi::CEngine*>		s_listEngines;
+static ::std::vector<::multi::CEngine*>			s_vectorOfLastEngines;
 
 static void AtExitFunction(void);
 static void PrintHelpForMex(void);
 static double GetNumericData(const mxArray* a_numeric);
-static void RunTasksOnTheEngines(int a_nNumberOfEnginesToUse, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[]);
+static void RunTasksOnTheEngines(int a_nNumberOfEnginesToUse, const char* a_functionName, int a_nNumOuts, mxArray *a_Outputs[],int a_nNumInps, const mxArray*a_Inputs[]);
 
 
 void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
@@ -39,6 +40,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 		mexLock();
 		s_nIsMexLocked = 1;
 		mexAtExit(&AtExitFunction);
+		s_nInited = 1;
 	}
 
 	if(a_nNumInps <1){
@@ -60,7 +62,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 		nNumberOfEnginesToUse = (int)GetNumericData(a_Inputs[1]);
 		pInput1 = a_Inputs[1];
 		a_Inputs[1] = a_Inputs[0];
-		RunTasksOnTheEngines(nNumberOfEnginesToUse, "feval", a_nNumOuts, a_nNumInps-1, a_Inputs + 1);
+		RunTasksOnTheEngines(nNumberOfEnginesToUse, "feval", a_nNumOuts, a_Outputs,a_nNumInps-1, a_Inputs + 1);
 		a_Inputs[1] = pInput1;
 	}
 	else if(mxIsChar(a_Inputs[0])){
@@ -84,6 +86,29 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 		}
 		else if (strcmp(pcOptionOrFunctionName, "--help") == 0) {
 			PrintHelpForMex();
+		}
+		else if (strcmp(pcOptionOrFunctionName, "--last-output-from-engine") == 0) {
+			::multi::CEngine* pEngine;
+			const ::multi::CEngine::EngineTask* pTask;
+			int nEngineNumber;
+			int nOutToGet, i;
+			if (a_nNumInps < 2) {
+				mexPrintf("Engine number to retrive output is not provided!\n");
+				PrintHelpForMex();
+				return;
+			}  // if (a_nNumOuts < 2) {
+
+			nEngineNumber = (int)GetNumericData(a_Inputs[1])-1;
+			if (!s_hashEngines.FindEntry(&nEngineNumber, 4, &pEngine)){return;}
+			pTask = pEngine->getLastTask();
+			if (!pTask) {return;}
+			nOutToGet = pTask->numberOfOutputs< a_nNumOuts? pTask->numberOfOutputs : a_nNumOuts;
+			//memcpy(a_Outputs, pTask->outputs, sizeof(mxArray*)*nOutToGet);
+			//memset(pTask->outputs, 0,sizeof(mxArray*)*nOutToGet);
+			for(i=0;i<nOutToGet;++i){
+				//a_Outputs[i] = mxDuplicateArray(pTask->outputs[i]);
+				a_Outputs[i] = pTask->outputs[i];
+			}
 		}
 		else if ((strcmp(pcOptionOrFunctionName, "--set-number-of-engines") == 0)||(strcmp(pcOptionOrFunctionName, "-sen") == 0)) {
 			const int cnCurrentNumber = s_listEngines.count();
@@ -122,7 +147,7 @@ void mexFunction(int a_nNumOuts, mxArray *a_Outputs[],
 				return;
 			}  // if (a_nNumOuts < 2) {
 			nNumberOfEnginesToUse = (int)GetNumericData(a_Inputs[1]);
-			RunTasksOnTheEngines(nNumberOfEnginesToUse,pcOptionOrFunctionName,a_nNumOuts,a_nNumInps-2,a_Inputs+2);
+			RunTasksOnTheEngines(nNumberOfEnginesToUse,pcOptionOrFunctionName,a_nNumOuts, a_Outputs,a_nNumInps-2,a_Inputs+2);
 		}
 	}  // if(mxIsChar(a_Inputs[0])){
 }
@@ -143,13 +168,19 @@ static void PrintHelpForMex(void)
 static void AtExitFunction(void)
 {
 	int nEngineNumber;
+
+	if (s_nInited == 0) {return;}
+
 	::multi::CEngine* pEngine;
 	while(s_listEngines.first()){
 		pEngine = s_listEngines.first()->data;
 		nEngineNumber = pEngine->number();
 		s_hashEngines.RemoveEntry(&nEngineNumber, 4);
 		s_listEngines.RemoveData(s_listEngines.first());
+		delete pEngine;
 	}
+
+	s_nInited = 0;
 }
 
 
@@ -197,7 +228,7 @@ static double GetNumericData(const mxArray* a_numeric)
 }
 
 
-static void RunTasksOnTheEngines(int a_nNumberOfEnginesToUse,const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[])
+static void RunTasksOnTheEngines(int a_nNumberOfEnginesToUse,const char* a_functionName, int a_nNumOuts, mxArray *a_Outputs[], int a_nNumInps, const mxArray*a_Inputs[])
 {
 	static ::common::UnnamedSemaphoreLite	sSemaForGui;
 	const int cnCurrentNumber = s_listEngines.count();
@@ -206,7 +237,6 @@ static void RunTasksOnTheEngines(int a_nNumberOfEnginesToUse,const char* a_funct
 	int nTaskNumber = s_nTaskNumber++;
 	::common::listN::ListItem< ::multi::CEngine* >* pItem;
 	::multi::CEngine*  pEngine;
-	::std::vector<::multi::CEngine*> vectorOfEngines;
 	bool bDoneForAll;
 
 	if (a_nNumberOfEnginesToUse > cnCurrentNumber) {
@@ -221,12 +251,12 @@ static void RunTasksOnTheEngines(int a_nNumberOfEnginesToUse,const char* a_funct
 		mexPrintf("Number of Engines changed from %d to %d\n", cnCurrentNumber, a_nNumberOfEnginesToUse);
 	}
 
-	vectorOfEngines.resize(a_nNumberOfEnginesToUse);
+	s_vectorOfLastEngines.resize(a_nNumberOfEnginesToUse);
 
 	for (i = 0, pItem=s_listEngines.first(); (i < a_nNumberOfEnginesToUse)&& pItem; pItem = pItem->next) {
 		pEngine = pItem->data;
-		if(pEngine->addFunctionIfFree(nTaskNumber, a_functionName, a_nNumOuts,a_nNumInps,a_Inputs,&sSemaForGui)){
-			vectorOfEngines[i++]=pEngine;
+		if(pEngine->addFunctionIfFree(nTaskNumber, a_functionName, a_nNumOuts,a_nNumInps,a_Inputs,&sSemaForGui,i)){
+			s_vectorOfLastEngines[i++]=pEngine;
 		}  // if(pEngine->addFunctionIfFree(nTaskNumber, a_functionName, a_nNumOuts,a_nNumInps,a_Inputs,&sSemaForGui)){
 	}  // for (i = 0, pItem=s_listEngines.first(); (i < a_nNumberOfEnginesToUse)&& pItem; pItem = pItem->next) {
 
@@ -237,7 +267,7 @@ static void RunTasksOnTheEngines(int a_nNumberOfEnginesToUse,const char* a_funct
 		pEngine = new ::multi::CEngine(nEngineNumber);
 		s_hashEngines.AddEntry(&nEngineNumber, 4, pEngine);
 		s_listEngines.AddData(pEngine);
-		pEngine->addFunction(nTaskNumber, a_functionName, a_nNumOuts, a_nNumInps, a_Inputs, &sSemaForGui);
+		pEngine->addFunction(nTaskNumber, a_functionName, a_nNumOuts, a_nNumInps, a_Inputs, &sSemaForGui,i++);
 	}
 
 	
@@ -245,12 +275,16 @@ static void RunTasksOnTheEngines(int a_nNumberOfEnginesToUse,const char* a_funct
 		sSemaForGui.wait();
 		bDoneForAll = true;
 		for (i = 0; i < a_nNumberOfEnginesToUse;++i) {
-			if(nTaskNumber>vectorOfEngines[i]->lastFinishedTask()){bDoneForAll=false;break;}
+			if(nTaskNumber>s_vectorOfLastEngines[i]->lastFinishedTask()){bDoneForAll=false;break;}
 		}
 		if(bDoneForAll){break;}
 	}
 
 	for (i = 0; i < a_nNumberOfEnginesToUse; ++i) {
 		sSemaForGui.wait(0);
+	}
+
+	for(i=0;i< a_nNumOuts;++i){
+		a_Outputs[i]=mxCreateNumericArray(0,0,mxINT8_CLASS,mxREAL);
 	}
 }

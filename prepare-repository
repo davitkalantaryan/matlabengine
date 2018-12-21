@@ -1,0 +1,9 @@
+#!bash
+
+scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+curDir=`pwd`
+
+cd ${scriptDir}
+git submodule update --init --recursive
+
+cd $curDir
