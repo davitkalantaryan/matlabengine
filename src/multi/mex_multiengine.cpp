@@ -142,9 +142,9 @@ static int										s_nNextEngineNumber = 0;
 static int										s_nIsMexLocked = 0;
 static int										s_nTaskNumber = 0;
 static int										s_nInited = 0;
-static ::common::HashTbl<::multi::CEngine*>		s_hashEngines;
-static ::common::List<::multi::CEngine*>		s_listEngines;
-static ::std::vector<::multi::CEngine*>			s_vectorOfLastEngines;
+static ::common::HashTbl< ::multi::CEngine* >	s_hashEngines;
+static ::common::List< ::multi::CEngine* >		s_listEngines;
+static ::std::vector< ::multi::CEngine* >		s_vectorOfLastEngines;
 
 static void AtExitFunction(void);
 static void PrintHelpForMex(void);

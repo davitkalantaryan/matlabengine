@@ -127,7 +127,7 @@ void multi::CEngine::EngineThread()
 	//return 0;
 #else
 	pthread_t curThread = pthread_self();
-	pthread_setname_np(&curThread, "multi::CEngine::EngineThread");
+    pthread_setname_np(curThread, "multi::CEngine::EngineThread");
 #endif
 
 	m_pEngine = engOpen(NULL);

@@ -17,6 +17,7 @@ INCLUDEPATH += ../../../contrib/matlab/include/
 
 
 TEMPLATE = lib
+CONFIG += plugin
 #QMAKE_EXTRA_TARGETS += copy_mex_file
 #copy_mex_file.commands = "cp "
 #POST_TARGETDEPS += copy_mex_file
