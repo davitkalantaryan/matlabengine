@@ -22,6 +22,8 @@ sys/*/bin/*
 !sys/*/install/server/*.bat
 
 
+src/matlabscripts/*.asv
+
 prj/*/*/*
 #prj
 prj/*/*/Debug

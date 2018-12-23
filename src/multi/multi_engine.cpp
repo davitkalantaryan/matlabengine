@@ -17,7 +17,7 @@
 
 #define	OUT_NAME						"out__"
 #define	INP_NAME						"in__"
-#define	OUT_NAME_BS_2					OUT_NAME "as_byteStream__"
+#define	OUT_NAME_BS_3					OUT_NAME "as_byteStream__"
 #define INP_BUFF_LEN_MIN1				127
 #define EVAL_STRING_BUFFER_LENGTH_MIN1	2047
 #ifndef HANDLE_MEM_DEF
@@ -132,7 +132,8 @@ void multi::CEngine::EngineThread()
 
 	m_pEngine = engOpen(NULL);
 	if(!m_pEngine){m_isError=1;return;}
-	engSetVisible(m_pEngine, true);
+	engSetVisible(m_pEngine, false);
+	//engSetVisible(m_pEngine, true);
 	m_isStarted = 1;
 
 	while(m_shouldRun){
@@ -159,8 +160,10 @@ void multi::CEngine::runFunctionInEngineThread(EngineTask* a_pTask)
 	int  i, nOffset(0);
 	char vcEvalStringBuffer[EVAL_STRING_BUFFER_LENGTH_MIN1+1];
 	char argumentName[INP_BUFF_LEN_MIN1+1];
+	char argumentNameBS[INP_BUFF_LEN_MIN1+1];
 	
 	engEvalString(m_pEngine, "lasterror reset");
+	engEvalString(m_pEngine, "clear all");
 	a_pTask->taskStatus = TaskStatus::Running;
 
 	if(cnOutputs>0){
@@ -195,10 +198,11 @@ void multi::CEngine::runFunctionInEngineThread(EngineTask* a_pTask)
 
 	for (i = 0; i < cnOutputs; ++i) {
 		GenerateInputOrOutName((int)m_nEngineNumber,a_pTask->taskNumber, i, OUT_NAME, argumentName);
-		snprintf(vcEvalStringBuffer, EVAL_STRING_BUFFER_LENGTH_MIN1, OUT_NAME_BS_2 "=getByteStreamFromArray(%s);",argumentName);
+		GenerateInputOrOutName((int)m_nEngineNumber,a_pTask->taskNumber, i, OUT_NAME_BS_3, argumentNameBS);
+		snprintf(vcEvalStringBuffer, EVAL_STRING_BUFFER_LENGTH_MIN1, "%s=getByteStreamFromArray(%s);", argumentNameBS,argumentName);
 		engEvalString(m_pEngine, vcEvalStringBuffer);
 
-		pOut = engGetVariable(m_pEngine, OUT_NAME_BS_2);
+		pOut = engGetVariable(m_pEngine, argumentNameBS);
 		if (pOut) {unOutSize = mxGetNumberOfElements(pOut);}
 		else { unOutSize = 0; }
 
