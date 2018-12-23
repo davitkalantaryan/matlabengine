@@ -10,9 +10,11 @@
 #ifdef _WIN32
 #include <Windows.h>
 #define SleepMsIntr(_x)		SleepEx((_x),TRUE)	
+#define ENGINE_START_STRING NULL
 #else
 #include <unistd.h>
 #define SleepMsIntr(_x)		usleep(1000*(_x))
+#define ENGINE_START_STRING "init_root_and_call matlab_R2016b"
 #endif
 
 #define	OUT_NAME						"out__"
@@ -130,10 +132,10 @@ void multi::CEngine::EngineThread()
     pthread_setname_np(curThread, "multi::CEngine::EngineThread");
 #endif
 
-	m_pEngine = engOpen(NULL);
+    m_pEngine = engOpen(ENGINE_START_STRING);
 	if(!m_pEngine){m_isError=1;return;}
-	engSetVisible(m_pEngine, false);
-	//engSetVisible(m_pEngine, true);
+    engSetVisible(m_pEngine, false);
+    //engSetVisible(m_pEngine, true);
 	m_isStarted = 1;
 
 	while(m_shouldRun){
