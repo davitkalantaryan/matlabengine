@@ -29,9 +29,13 @@
 static void GenerateInputOrOutName(int a_nEngineNumber,int a_nTaskNumber,int a_nIndex, const char* a_cpcExtraString, char* a_pcBuffer);
 
 
-multi::CEngine::CEngine(int a_nEngineNumber)
+multi::CEngine::CEngine(int a_nEngineNumber,::common::UnnamedSemaphoreLite* a_pSemaForStartingCalc, 
+	::common::listN::Fifo<SubTask*>* a_pFifo, volatile int* a_pnRun)
 	:
-	m_pEngine(NULL)
+	m_pEngine(NULL),
+	m_pSemaToStartCalc(a_pSemaForStartingCalc),
+	m_pFifoToDoTasks(a_pFifo),
+	m_pnRun(a_pnRun)
 {
 	m_nLastFinishedtaskNumber=m_isEngineRunning=m_isError=m_shouldRun = m_isStarted = 0;
 	m_nEngineNumber = (uint64_t)a_nEngineNumber;
@@ -42,11 +46,6 @@ multi::CEngine::CEngine(int a_nEngineNumber)
 
 multi::CEngine::~CEngine()
 {
-	multi::CEngine::EngineTask* pTask;
-	StopEngine();
-	while(m_fifoToDoTasks.Extract(&pTask)){
-		delete pTask;
-	}
 }
 
 
@@ -59,17 +58,6 @@ int	multi::CEngine::engineNumber()const
 uint64_t multi::CEngine::isRunning()const
 {
 	return m_isEngineRunning;
-}
-
-
-const multi::CEngine::EngineTask* multi::CEngine::getFirstReadyTask()const
-{
-	multi::CEngine::EngineTask* pTask;
-	if(m_fifoAlreadyDoneTasks.Extract(&pTask)){
-		m_fifoDummyTasks.AddElement(pTask);
-		return pTask;
-	}
-	return NULL;
 }
 
 int multi::CEngine::StartEngine()
@@ -87,7 +75,7 @@ void multi::CEngine::StopEngine()
 {
 	if(!m_shouldRun){return;}
 	m_shouldRun = 0;
-	m_semaEngine.post();
+	//m_semaEngine.post();
 	m_threadForEngine.join();
 }
 
@@ -111,7 +99,7 @@ typedef struct tagTHREADNAME_INFO
 
 void multi::CEngine::EngineThread()
 {
-	EngineTask* pTask;
+	SubTask* pTask;
 
 #ifdef _WIN32
 	THREADNAME_INFO info;
@@ -138,12 +126,14 @@ void multi::CEngine::EngineThread()
     //engSetVisible(m_pEngine, true);
 	m_isStarted = 1;
 
-	while(m_shouldRun){
+	while(m_shouldRun && *m_pnRun){
 		m_isEngineRunning = 0;
-		m_semaEngine.wait();
-		while (m_shouldRun && m_fifoToDoTasks.Extract(&pTask)) {
+		m_pSemaToStartCalc->wait();
+		while (m_shouldRun && (*m_pnRun) && m_pFifoToDoTasks->Extract(&pTask)) {
 			runFunctionInEngineThread(pTask);
-			m_fifoAlreadyDoneTasks.AddElement(pTask);
+			if(pTask->AddTaskToDoneTasks()){
+			}
+			//m_fifoAlreadyDoneTasks.AddElement(pTask);
 		}
 	}
 
@@ -153,12 +143,12 @@ void multi::CEngine::EngineThread()
 }
 
 
-void multi::CEngine::runFunctionInEngineThread(EngineTask* a_pTask)
+void multi::CEngine::runFunctionInEngineThread(SubTask* a_pTask)
 {
 	mxArray* pOut;
 	size_t unOutSize;
-	const int cnOutputs= (int)a_pTask->outputs2.size();
-	const int cnInputs = (int)a_pTask->inputs.size();
+	const int cnOutputs= (int)a_pTask->m_outputs.size();
+	const int cnInputs = (int)a_pTask->m_pParent->inputs().size();
 	int  i, nOffset(0);
 	char vcEvalStringBuffer[EVAL_STRING_BUFFER_LENGTH_MIN1+1];
 	char argumentName[INP_BUFF_LEN_MIN1+1];
@@ -166,7 +156,7 @@ void multi::CEngine::runFunctionInEngineThread(EngineTask* a_pTask)
 	
 	engEvalString(m_pEngine, "lasterror reset");
 	engEvalString(m_pEngine, "clear all");
-	a_pTask->taskStatus = TaskStatus::Running;
+	//a_pTask->taskStatus = TaskStatus::Running;
 
 	if(cnOutputs>0){
 		GenerateInputOrOutName((int)m_nEngineNumber,a_pTask->taskNumber,0, OUT_NAME, argumentName);
@@ -208,8 +198,8 @@ void multi::CEngine::runFunctionInEngineThread(EngineTask* a_pTask)
 		if (pOut) {unOutSize = mxGetNumberOfElements(pOut);}
 		else { unOutSize = 0; }
 
-		a_pTask->outputs2[i]->resize(unOutSize);
-		if(unOutSize){memcpy(a_pTask->outputs2[i]->buffer(), mxGetData(pOut), unOutSize);}
+		a_pTask->outputs[i].resize(unOutSize);
+		if(unOutSize){memcpy(a_pTask->outputs[i].buffer(), mxGetData(pOut), unOutSize);}
 	}
 
 	m_nLastFinishedtaskNumber = (uint64_t)a_pTask->taskNumber;
@@ -261,17 +251,11 @@ multi::CEngine::EngineTask::~EngineTask()
 {
 	size_t i;
 	const size_t cnInputs = (size_t)this->inputs.size();
-	const size_t cnOutputs = (size_t)this->outputs2.size();
 	for (i=0; i < cnInputs; ++i) {
 		if (this->inputs[i]) {
 			mxDestroyArray(this->inputs[i]);
 		}
 	}
-
-	for (i=0; i < cnOutputs; ++i) {
-		delete this->outputs2[i];
-	}
-
 }
 
 
@@ -300,7 +284,7 @@ void multi::CEngine::EngineTask::init(
 
 
 	this->inputs.resize(a_nNumInps2);
-	this->resizeOutputs(a_nNumOuts2);
+	this->outputs.resize(a_nNumOuts2);
 
 	for (i=0; i < a_nNumInps2; ++i) {
 		if (mxIsChar(a_Inputs[i])) {
@@ -318,34 +302,20 @@ void multi::CEngine::EngineTask::init(
 }
 
 
-void multi::CEngine::EngineTask::resizeOutputs(size_t a_newSize)
-{
-	const size_t cunOldSize(this->outputs2.size());
-
-	this->outputs2.resize(a_newSize);
-
-	if(a_newSize> cunOldSize){
-		for(size_t i(cunOldSize);i<a_newSize;++i){
-			this->outputs2[i] = new ResizableStore<uint8_t*>;
-		}
-	}
-}
-
-
 void multi::CEngine::EngineTask::GetOutputs(int a_nNumOuts, mxArray *a_Outputs[])const
 {
 	//mxArray* pOutInit;
 	mxArray* pByteStream;
 	size_t unOutSize;
-	const int cnOutputs = (int)this->outputs2.size();
+	const int cnOutputs = (int)this->outputs.size();
 	const int cnNumber = cnOutputs< a_nNumOuts? cnOutputs: a_nNumOuts;
 
 	for(int i(0);i<cnNumber;++i){
-		unOutSize = this->outputs2[i]->size();
+		unOutSize = this->outputs[i].size();
 		if (unOutSize > 0) {
 			pByteStream = mxCreateNumericMatrix(1, unOutSize, mxUINT8_CLASS, mxREAL);
 
-			memcpy(mxGetData(pByteStream), this->outputs2[i]->buffer(), unOutSize);
+			memcpy(mxGetData(pByteStream), this->outputs[i].buffer(), unOutSize);
 			//if (!mexCallMATLABWithTrap(1, &pOutInit, 1, &pByteStream, "getArrayFromByteStream")) {
 			if (!mexCallMATLABWithTrap(1, &a_Outputs[i], 1, &pByteStream, "getArrayFromByteStream")) {
 				//a_Outputs[i] = mxDuplicateArray(pOutInit);
