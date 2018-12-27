@@ -63,6 +63,22 @@ void common::ResizableStore<Type>::resize(size_t a_newSize, void(*a_fpFunc)(Type
 
 
 template <typename Type>
+template <typename TypeConsArg>
+void common::ResizableStore<Type>::resize(size_t a_newSize, const TypeConsArg& a_arg)
+{
+	if(a_newSize>m_unMaxSize){
+		Type* pcTmpBuffer = (Type*)realloc(m_ptBuffer, a_newSize * sizeof(Type));
+		if(!pcTmpBuffer){return;}
+		m_ptBuffer = pcTmpBuffer;
+		for(;m_unMaxSize<a_newSize;++m_unMaxSize){
+			new(m_ptBuffer + m_unMaxSize) Type(a_arg, m_unMaxSize);
+		}
+	}
+	m_unSize = a_newSize;
+}
+
+
+template <typename Type>
 size_t common::ResizableStore<Type>::size()const
 {
 	return m_unSize;

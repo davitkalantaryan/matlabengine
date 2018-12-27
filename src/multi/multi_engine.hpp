@@ -21,15 +21,11 @@ namespace multi {
 class CEngine
 {
 public:
-	CEngine(int a_nEngineNumber, ::common::UnnamedSemaphoreLite* a_pSema, ::common::listN::Fifo<SubTask*>* a_pFifo, volatile int* a_pnRun);
+	CEngine(int a_nEngineNumber, ::common::UnnamedSemaphoreLite* a_pSemaForStartingCalc, ::common::listN::Fifo<SubTask*>* a_pFifo, volatile int* a_pnRun);
 	virtual ~CEngine();
 
 	int					engineNumber()const;
-	void				addFunction2(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform, int a_nIndex);
-	bool				addFunctionIfFree2(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform, int a_nIndex);
 	uint64_t			isRunning()const;
-	//const EngineTask*	getFirstReadyTask()const;
-	//void				StartCalc();
 
 protected:
 	void				EngineThread();
@@ -47,9 +43,9 @@ protected:
 	uint64_t										m_nEngineNumber : 24;
 	uint64_t										m_nLastFinishedtaskNumber : 24;
 	::STDN::thread									m_threadForEngine;
-	::common::UnnamedSemaphoreLite*					m_pSemaToStartCalc;
-	::common::listN::Fifo<SubTask*>*				m_pFifoToDoTasks;
-	volatile int*									m_pnRun;
+	::common::UnnamedSemaphoreLite*const			m_pSemaToStartCalc;
+	::common::listN::Fifo<SubTask*>*const			m_pFifoToDoTasks;
+	volatile int*const								m_pnRun;
 	
 };
 

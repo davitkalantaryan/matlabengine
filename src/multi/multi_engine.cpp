@@ -6,17 +6,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mex.h>
+#include <signal.h>
+
+#define IOI_INDEX_FOR_EXCEPTION		100000
 
 #ifdef _WIN32
 #include <Windows.h>
+#define INTERRUPT_INP	ULONG_PTR
 #define SleepMsIntr(_x)		SleepEx((_x),TRUE)	
 #define ENGINE_START_STRING NULL
 #else
 #include <unistd.h>
+#define INTERRUPT_INP	int
 #define SleepMsIntr(_x)		usleep(1000*(_x))
 #define ENGINE_START_STRING "init_root_and_call matlab_R2016b"
 #endif
 
+#define REPLACE_BY_INDEX				"--replace-by-index"
 #define	OUT_NAME						"out__"
 #define	INP_NAME						"in__"
 #define	OUT_NAME_BS_3					OUT_NAME "as_byteStream__"
@@ -26,7 +32,9 @@
 #define HANDLE_MEM_DEF(_pointer,...)	do{if(!(_pointer)){throw "low memory";}}while(0)
 #endif
 
-static void GenerateInputOrOutName(int a_nEngineNumber,int a_nTaskNumber,int a_nIndex, const char* a_cpcExtraString, char* a_pcBuffer);
+static void GenerateInputOrOutName(int a_nTaskNumber, int a_nEngineNumber, int a_nSubTaskIndex, int a_nInOrOutIndex, const char* a_cpcExtraString, char* a_pcBuffer);
+#define GenerateInputOrOutNameM( _pTask,_indexOutOrInp,_extraStr,_argumentName) \
+			GenerateInputOrOutName((_pTask)->m_pParent->taskNumber(), (int)m_nEngineNumber, (_pTask)->m_subTaskIndex, (_indexOutOrInp), (_extraStr), (_argumentName))
 
 
 multi::CEngine::CEngine(int a_nEngineNumber,::common::UnnamedSemaphoreLite* a_pSemaForStartingCalc, 
@@ -46,6 +54,7 @@ multi::CEngine::CEngine(int a_nEngineNumber,::common::UnnamedSemaphoreLite* a_pS
 
 multi::CEngine::~CEngine()
 {
+	StopEngine();
 }
 
 
@@ -71,10 +80,20 @@ int multi::CEngine::StartEngine()
 }
 
 
+static void InterruptFunction(INTERRUPT_INP) {}
+
+
 void multi::CEngine::StopEngine()
 {
 	if(!m_shouldRun){return;}
 	m_shouldRun = 0;
+	if(*m_pnRun){
+#ifdef _WIN32
+		QueueUserAPC(&InterruptFunction,m_threadForEngine.native_handle(),NULL);
+#else
+		pthread_kill(m_threadForEngine.native_handle(),SIGPIPE);
+#endif
+	}
 	//m_semaEngine.post();
 	m_threadForEngine.join();
 }
@@ -116,24 +135,30 @@ void multi::CEngine::EngineThread()
 	}
 	//return 0;
 #else
+	struct sigaction newAction;
 	pthread_t curThread = pthread_self();
     pthread_setname_np(curThread, "multi::CEngine::EngineThread");
+
+	newAction.sa_flags = 0;
+	sigemptyset(&newAction.sa_mask);
+	newAction.sa_restorer = NULL;
+	newAction.sa_handler = InterruptFunction;
+
+	sigaction(SIGPIPE, &newAction, NULL);
 #endif
 
     m_pEngine = engOpen(ENGINE_START_STRING);
 	if(!m_pEngine){m_isError=1;return;}
     engSetVisible(m_pEngine, false);
-    //engSetVisible(m_pEngine, true);
+    engSetVisible(m_pEngine, true);
 	m_isStarted = 1;
 
 	while(m_shouldRun && *m_pnRun){
 		m_isEngineRunning = 0;
 		m_pSemaToStartCalc->wait();
-		while (m_shouldRun && (*m_pnRun) && m_pFifoToDoTasks->Extract(&pTask)) {
+		if (m_pFifoToDoTasks->Extract(&pTask)) {
 			runFunctionInEngineThread(pTask);
-			if(pTask->AddTaskToDoneTasks()){
-			}
-			//m_fifoAlreadyDoneTasks.AddElement(pTask);
+			pTask->AddTaskToDoneTasks();
 		}
 	}
 
@@ -143,12 +168,33 @@ void multi::CEngine::EngineThread()
 }
 
 
+static inline void SetVariableToEngine(::Engine* a_pEngine, const mxArray* a_pVariable, const char* a_cpcVariableName, int a_nIndex)
+{
+	static const size_t  scunReplaceStrLengthPlus1(strlen(REPLACE_BY_INDEX) + 1);
+
+	if (mxIsChar(a_pVariable)) {
+		char vcPossibleReplaceBuffer[128];
+		mxGetString(a_pVariable, vcPossibleReplaceBuffer, scunReplaceStrLengthPlus1);
+		if (strncmp(vcPossibleReplaceBuffer, REPLACE_BY_INDEX, scunReplaceStrLengthPlus1) == 0) {
+			mxArray* pNewVar = mxCreateNumericMatrix(1, 1, mxUINT32_CLASS, mxREAL);
+			HANDLE_MEM_DEF(pNewVar," ");
+			*((uint32_t*)mxGetData(pNewVar)) = (uint32_t)a_nIndex;
+			engPutVariable(a_pEngine, a_cpcVariableName, pNewVar);
+			return;
+		}
+	}
+
+	engPutVariable(a_pEngine, a_cpcVariableName, a_pVariable);
+}
+
+
+
 void multi::CEngine::runFunctionInEngineThread(SubTask* a_pTask)
 {
 	mxArray* pOut;
 	size_t unOutSize;
 	const int cnOutputs= (int)a_pTask->m_outputs.size();
-	const int cnInputs = (int)a_pTask->m_pParent->inputs().size();
+	const int cnInputs = (int)a_pTask->m_pParent->numberOfInputs();
 	int  i, nOffset(0);
 	char vcEvalStringBuffer[EVAL_STRING_BUFFER_LENGTH_MIN1+1];
 	char argumentName[INP_BUFF_LEN_MIN1+1];
@@ -157,189 +203,80 @@ void multi::CEngine::runFunctionInEngineThread(SubTask* a_pTask)
 	engEvalString(m_pEngine, "lasterror reset");
 	engEvalString(m_pEngine, "clear all");
 	//a_pTask->taskStatus = TaskStatus::Running;
+	a_pTask->m_isError = 0;
 
 	if(cnOutputs>0){
-		GenerateInputOrOutName((int)m_nEngineNumber,a_pTask->taskNumber,0, OUT_NAME, argumentName);
+		GenerateInputOrOutNameM(a_pTask,0, OUT_NAME, argumentName);
 		nOffset += snprintf(vcEvalStringBuffer+nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1-nOffset,"[%s",argumentName);
 		for(i=1;i<cnOutputs;++i){
-			GenerateInputOrOutName((int)m_nEngineNumber,a_pTask->taskNumber,i, OUT_NAME, argumentName);
+			GenerateInputOrOutNameM(a_pTask,i, OUT_NAME, argumentName);
 			nOffset += snprintf(vcEvalStringBuffer+nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1-nOffset,",%s",argumentName);
 		}
 		nOffset += snprintf(vcEvalStringBuffer+nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1-nOffset,"]=");
 	}
 
-	nOffset += snprintf(vcEvalStringBuffer+nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1-nOffset,"%s",a_pTask->funcName.c_str());
+	nOffset += snprintf(vcEvalStringBuffer+nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1-nOffset,"%s",a_pTask->m_pParent->functionName());
 
 	if(cnInputs>0){
-		GenerateInputOrOutName((int)m_nEngineNumber,a_pTask->taskNumber, 0, INP_NAME, argumentName);
+		const mxArray** ppInputs = a_pTask->m_pParent->inputs2();
+		GenerateInputOrOutNameM(a_pTask, 0, INP_NAME, argumentName);
 		nOffset += snprintf(vcEvalStringBuffer + nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1 - nOffset, "(%s", argumentName);
-		engPutVariable(m_pEngine, argumentName,(a_pTask->inputs)[0]);
-		mxDestroyArray((a_pTask->inputs)[0]);
-		(a_pTask->inputs)[0] = NULL;
+		SetVariableToEngine(m_pEngine, ppInputs[0],argumentName,a_pTask->m_subTaskIndex);
 		for (i = 1; i < cnInputs; ++i) {
-			GenerateInputOrOutName((int)m_nEngineNumber,a_pTask->taskNumber, i, INP_NAME, argumentName);
+			GenerateInputOrOutNameM(a_pTask, i, INP_NAME, argumentName);
 			nOffset += snprintf(vcEvalStringBuffer+nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1-nOffset,",%s",argumentName);
-			engPutVariable(m_pEngine, argumentName,(a_pTask->inputs)[i]);
-			mxDestroyArray((a_pTask->inputs)[i]);
-			(a_pTask->inputs)[i]=NULL;
+			SetVariableToEngine(m_pEngine, ppInputs[i], argumentName, a_pTask->m_subTaskIndex);
 		}
 		nOffset += snprintf(vcEvalStringBuffer + nOffset, EVAL_STRING_BUFFER_LENGTH_MIN1 - nOffset, ");");
 	}
 
 	engEvalString(m_pEngine, vcEvalStringBuffer);
-
+	GenerateInputOrOutNameM(a_pTask, IOI_INDEX_FOR_EXCEPTION, OUT_NAME, argumentName);
+	snprintf(vcEvalStringBuffer, EVAL_STRING_BUFFER_LENGTH_MIN1, "%s=lasterror;", argumentName);
+	engEvalString(m_pEngine, vcEvalStringBuffer);
 	for (i = 0; i < cnOutputs; ++i) {
-		GenerateInputOrOutName((int)m_nEngineNumber,a_pTask->taskNumber, i, OUT_NAME, argumentName);
-		GenerateInputOrOutName((int)m_nEngineNumber,a_pTask->taskNumber, i, OUT_NAME_BS_3, argumentNameBS);
+		GenerateInputOrOutNameM(a_pTask, i, OUT_NAME, argumentName);
+		GenerateInputOrOutNameM(a_pTask, i, OUT_NAME_BS_3, argumentNameBS);
 		snprintf(vcEvalStringBuffer, EVAL_STRING_BUFFER_LENGTH_MIN1, "%s=getByteStreamFromArray(%s);", argumentNameBS,argumentName);
 		engEvalString(m_pEngine, vcEvalStringBuffer);
 
 		pOut = engGetVariable(m_pEngine, argumentNameBS);
-		if (pOut) {unOutSize = mxGetNumberOfElements(pOut);}
-		else { unOutSize = 0; }
-
-		a_pTask->outputs[i].resize(unOutSize);
-		if(unOutSize){memcpy(a_pTask->outputs[i].buffer(), mxGetData(pOut), unOutSize);}
-	}
-
-	m_nLastFinishedtaskNumber = (uint64_t)a_pTask->taskNumber;
-	a_pTask->taskStatus = TaskStatus::Stopped;
-	if(a_pTask->pSemaToInform){a_pTask->pSemaToInform->post();a_pTask->pSemaToInform=NULL;}
-}
-
-
-void multi::CEngine::StartCalc()
-{
-	m_semaEngine.post();
-}
-
-
-void multi::CEngine::addFunction2(int a_nTaskNumber,const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform, int a_nIndex)
-{
-	EngineTask* pTask;
-
-	m_isEngineRunning = 1;
-	if(!m_fifoDummyTasks.Extract(&pTask)){pTask = new EngineTask;}
-	pTask->init(a_nTaskNumber,a_functionName,a_nNumOuts,a_nNumInps,a_Inputs, a_pSemaToInform, a_nIndex);  // new will  throw exception
-	m_fifoToDoTasks.AddElement(pTask);
-}
-
-
-bool multi::CEngine::addFunctionIfFree2(int a_nTaskNumber, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform, int a_nIndex)
-{
-	if(!m_isEngineRunning){
-		addFunction2(a_nTaskNumber,a_functionName,a_nNumOuts,a_nNumInps,a_Inputs, a_pSemaToInform, a_nIndex);
-		return true;
-	}
-	return false;
-}
-
-
-#define REPLACE_BY_INDEX		"--replace-by-index"
-
-
-/*///////////////////////////////////////////////////////////////////////////////////////////////////////*/
-multi::CEngine::EngineTask::EngineTask()
-	:
-	taskNumber(-1),
-	pSemaToInform(NULL)
-{
-	this->taskStatus = multi::CEngine::TaskStatus::Stopped;
-}
-
-multi::CEngine::EngineTask::~EngineTask()
-{
-	size_t i;
-	const size_t cnInputs = (size_t)this->inputs.size();
-	for (i=0; i < cnInputs; ++i) {
-		if (this->inputs[i]) {
-			mxDestroyArray(this->inputs[i]);
+		if (pOut) {
+			unOutSize = mxGetNumberOfElements(pOut);
+			a_pTask->m_outputs[i].resize(unOutSize);
+			if (unOutSize) { memcpy(a_pTask->m_outputs[i].buffer(), mxGetData(pOut), unOutSize); }
+			mxDestroyArray(pOut);
 		}
-	}
-}
+		else { 
 
+			GenerateInputOrOutNameM(a_pTask, IOI_INDEX_FOR_EXCEPTION, OUT_NAME, argumentName);
+			GenerateInputOrOutNameM(a_pTask, 0, OUT_NAME_BS_3, argumentNameBS);
+			snprintf(vcEvalStringBuffer, EVAL_STRING_BUFFER_LENGTH_MIN1, "%s=getByteStreamFromArray(%s);", argumentNameBS, argumentName);
+			engEvalString(m_pEngine, vcEvalStringBuffer);
+			pOut = engGetVariable(m_pEngine, argumentNameBS);
 
-void multi::CEngine::EngineTask::init(
-	int a_nTaskNumber, const char* a_functionName, int a_nNumOuts2, int a_nNumInps2, 
-	const mxArray*a_Inputs[], ::common::UnnamedSemaphoreLite* a_pSemaToInform, int a_nIndex)
-{
-	static const size_t  scunReplaceStrLengthPlus1(strlen(REPLACE_BY_INDEX)+1);
-	//const int cnOutputs = (int)this->outputs.size();
-	const int cnInputs = (int)this->inputs.size();
-	int i;
-	char vcPossibleReplaceBuffer[128];
-
-	this->pSemaToInform = a_pSemaToInform;
-	this->taskStatus = multi::CEngine::TaskStatus::Stopped;
-	this->taskNumber = a_nTaskNumber;
-	this->funcName = a_functionName;
-
-	// todo:
-	// anyhow deleted in the engine thread, but try to understand reason of crash
-#if 1
-	for(i=0;i<cnInputs;++i){
-		if(this->inputs[i]){mxDestroyArray(this->inputs[i]);this->inputs[i]=NULL;}
-	}
-#endif
-
-
-	this->inputs.resize(a_nNumInps2);
-	this->outputs.resize(a_nNumOuts2);
-
-	for (i=0; i < a_nNumInps2; ++i) {
-		if (mxIsChar(a_Inputs[i])) {
-			mxGetString(a_Inputs[i], vcPossibleReplaceBuffer, scunReplaceStrLengthPlus1);
-			if (strncmp(vcPossibleReplaceBuffer, REPLACE_BY_INDEX, scunReplaceStrLengthPlus1) == 0) {
-				this->inputs[i] = mxCreateNumericMatrix(1, 1, mxUINT32_CLASS, mxREAL);
-				HANDLE_MEM_DEF(this->inputs[i]);
-				*((uint32_t*)mxGetData(this->inputs[i])) = (uint32_t)a_nIndex;
-				continue;
+			if(pOut){
+				unOutSize = mxGetNumberOfElements(pOut);
+				a_pTask->m_outputs[0].resize(unOutSize);
+				if (unOutSize) { memcpy(a_pTask->m_outputs[0].buffer(), mxGetData(pOut), unOutSize); }  // error should go to first place
+				mxDestroyArray(pOut);
 			}
+			else {a_pTask->m_outputs[i].resize(0);a_pTask->m_isError=1;}
+			a_pTask->m_isError = 1;
+			break;
+
 		}
-		this->inputs[i] = mxDuplicateArray(a_Inputs[i]);
-		HANDLE_MEM_DEF(this->inputs[i]);
+
 	}
+
+	m_nLastFinishedtaskNumber = (uint64_t)a_pTask->m_pParent->taskNumber();
 }
 
 
-void multi::CEngine::EngineTask::GetOutputs(int a_nNumOuts, mxArray *a_Outputs[])const
+
+/*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
+
+static void GenerateInputOrOutName(int a_nTaskNumber, int a_nEngineNumber, int a_nSubTaskIndex, int a_nInOrOutIndex, const char* a_cpcExtraString, char* a_pcBuffer)
 {
-	//mxArray* pOutInit;
-	mxArray* pByteStream;
-	size_t unOutSize;
-	const int cnOutputs = (int)this->outputs.size();
-	const int cnNumber = cnOutputs< a_nNumOuts? cnOutputs: a_nNumOuts;
-
-	for(int i(0);i<cnNumber;++i){
-		unOutSize = this->outputs[i].size();
-		if (unOutSize > 0) {
-			pByteStream = mxCreateNumericMatrix(1, unOutSize, mxUINT8_CLASS, mxREAL);
-
-			memcpy(mxGetData(pByteStream), this->outputs[i].buffer(), unOutSize);
-			//if (!mexCallMATLABWithTrap(1, &pOutInit, 1, &pByteStream, "getArrayFromByteStream")) {
-			if (!mexCallMATLABWithTrap(1, &a_Outputs[i], 1, &pByteStream, "getArrayFromByteStream")) {
-				//a_Outputs[i] = mxDuplicateArray(pOutInit);
-				//mxDestroyArray(pOutInit);
-			}
-			else {
-				a_Outputs[i] = mxCreateNumericMatrix(1, 0, mxUINT8_CLASS, mxREAL);
-			}
-
-			mxDestroyArray(pByteStream);
-		}
-		else {
-			a_Outputs[0] = mxCreateNumericMatrix(1, 0, mxUINT8_CLASS, mxREAL);
-		}
-	}
-}
-
-/*///////////////////////////////////////////////////////////////////////////////////////////////*/
-
-
-
-/*//////////////////////////////////////////////////////////////////////////////////////////////*/
-
-static void GenerateInputOrOutName(int a_nEngineNumber,int a_nTaskNumber, int a_nIndex, const char* a_cpcExtraString, char* a_pcBuffer)
-{
-	snprintf(a_pcBuffer, INP_BUFF_LEN_MIN1, "argument__e%.3d_t%.4d_i%.3d_%s", a_nEngineNumber,a_nTaskNumber, a_nIndex, a_cpcExtraString);
+	snprintf(a_pcBuffer, INP_BUFF_LEN_MIN1, "argument__t%.5d_e%.3d_sti%.3d_ioi%.3d_%s", a_nTaskNumber,a_nEngineNumber, a_nSubTaskIndex, a_nInOrOutIndex,a_cpcExtraString);
 }

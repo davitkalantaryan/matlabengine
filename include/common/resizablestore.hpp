@@ -18,6 +18,8 @@ public:
 
 	void			resize(size_t newSize);
 	void			resize(size_t newSize, void (*a_fpFunc)(Type*));
+	template <typename TypeConsArg>
+	void			resize(size_t newSize,const TypeConsArg& a_arg);
 	size_t			size()const;
 	Type*			buffer();
 	const Type*		buffer()const;

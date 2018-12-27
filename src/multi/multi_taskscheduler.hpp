@@ -7,6 +7,8 @@
 #include "multi_engine.hpp"
 #include <common/common_hashtbl.hpp>
 #include "multi_task.hpp"
+#include <common/lists.hpp>
+#include <vector>
 
 namespace multi{
 
@@ -16,19 +18,26 @@ public:
 	TaskScheduler();
 	~TaskScheduler();
 
-	void calcAndWait(int a_nNumOfThreads, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[]);
-	void calcAndSaveNoWait(int a_nNumOfThreads, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[]);
-
-	void TaskDone(multi::Task* a_pTask );
+	multi::Task* calcAndWait(int a_nNumOfThreads, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[]);
+	void calcAndSaveNoWait(const char* a_cpcTaskName,int a_nNumOfThreads, const char* a_functionName, int a_nNumOuts, int a_nNumInps, const mxArray*a_Inputs[]);
+	void setNumberOfEngines(int a_nNumber);
+	int	 numberOfEngines()const;
+	void FinalizeTask(Task* a_pTask);
+	bool GetSavedTask(Task** a_pBuffer);
+	bool GetSavedTaskAndRemove(Task** a_pBuffer);
 
 private:
-	struct CSubTask {SubTask* pSubTask;CSubTask():pSubTask(new SubTask){} ~CSubTask(){delete this->pSubTask;} SubTask* operator->(){return this->pSubTask;}};
+	struct STaskItem{ char* taskName;multi::Task* task; };
 
 private:
-	multi::Task*						m_currentTask;
-	::common::HashTbl< multi::Task* >	m_savedTasks;
-	::common::UnnamedSemaphoreLite		m_semaForStartingCalc;
-	::common::UnnamedSemaphoreLite		m_semaWhenFinished;
+	volatile int												m_nWork;
+	multi::Task													m_taskForGui;
+	::common::HashTbl< common::listN::ListItem<STaskItem>* >	m_savedTasks;
+	::common::UnnamedSemaphoreLite								m_semaForStartingCalc;
+	::common::UnnamedSemaphoreLite								m_semaWhenFinishedForGui;
+	::common::listN::Fifo<SubTask*>								m_fifoSubTasks;
+	::std::vector<CEngine*>										m_vectorEngines;
+	::common::List< STaskItem >									m_listSavedTasks;
 };
 
 }  // namespace multi{
