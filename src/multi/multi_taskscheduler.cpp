@@ -17,12 +17,20 @@ multi::TaskScheduler::TaskScheduler()
 
 multi::TaskScheduler::~TaskScheduler()
 {
+	uint32_t unStrLenPlus1;
 	int i;
 	const int cnCurrentNumber = (int)m_vectorEngines.size();
 	m_nWork = 0;
 	m_semaForStartingCalc.post(cnCurrentNumber);
 	for (i = 0; i < cnCurrentNumber; ++i) {
 		delete m_vectorEngines[i];
+	}
+
+	while(m_listSavedTasks.first()){
+		unStrLenPlus1 = (uint32_t)strlen(m_listSavedTasks.first()->data.taskName) + 1;
+		m_hashSavedTasks.RemoveEntry(m_listSavedTasks.first()->data.taskName,unStrLenPlus1);
+		delete m_listSavedTasks.first()->data.task;
+		m_listSavedTasks.RemoveData(m_listSavedTasks.first());
 	}
 }
 
@@ -41,15 +49,17 @@ void multi::TaskScheduler::calcAndSaveNoWait(const char* a_cpcTaskName, int a_nN
 {
 	common::listN::ListItem<STaskItem>* pItem;
 	const uint32_t unStrLenPlus1((uint32_t)strlen(a_cpcTaskName)+1);
+	Task* pTask;
 
-	if(!m_savedTasks.FindEntry(a_cpcTaskName, unStrLenPlus1,&pItem)){
+	if(!m_hashSavedTasks.FindEntry(a_cpcTaskName, unStrLenPlus1,&pItem)){
 		STaskItem aItem;
 		aItem.task = new multi::Task(this, 1);
 		pItem = m_listSavedTasks.AddData(aItem);
-		pItem->data.taskName = (char*)m_savedTasks.AddEntry2(a_cpcTaskName, unStrLenPlus1,pItem);
+		pItem->data.taskName = (char*)m_hashSavedTasks.AddEntry2(a_cpcTaskName, unStrLenPlus1,pItem);
 	}
+	pTask = const_cast<Task*>(pItem->data.task);
 
-	pItem->data.task->PrepareTaskForCalc(a_nNumOfThreads, a_functionName, a_nNumOuts, a_nNumInps, a_Inputs);
+	pTask->PrepareTaskForCalc(a_nNumOfThreads, a_functionName, a_nNumOuts, a_nNumInps, a_Inputs);
 	m_fifoSubTasks.AddElements(pItem->data.task->getSubTasksPtr(), a_nNumOfThreads);
 	m_semaForStartingCalc.post(a_nNumOfThreads);
 }
@@ -92,11 +102,35 @@ void multi::TaskScheduler::FinalizeTask(Task* a_pTask)
 }
 
 
-bool multi::TaskScheduler::GetSavedTask(Task** a_pBuffer)
+bool multi::TaskScheduler::GetSavedTask(const char* a_taskName, contsTaskPtr* a_pBuffer)
 {
+	const uint32_t cunStrlenPlus1((uint32_t)strlen(a_taskName) + 1);
+	common::listN::ListItem<multi::TaskScheduler::STaskItem>* pItem;
+
+	if(m_hashSavedTasks.FindEntry(a_taskName, cunStrlenPlus1,&pItem)){
+		*a_pBuffer = pItem->data.task;
+		return true;
+	}
+	return false;
 }
 
 
-bool multi::TaskScheduler::GetSavedTaskAndRemove(Task** a_pBuffer)
+bool multi::TaskScheduler::RemoveSavedTask(const char* a_taskName)
 {
+	const uint32_t cunStrlenPlus1((uint32_t)strlen(a_taskName) + 1);
+	common::listN::ListItem<multi::TaskScheduler::STaskItem>* pItem;
+
+	if(m_hashSavedTasks.RemoveEntry2(a_taskName,cunStrlenPlus1,&pItem)){
+		delete pItem->data.task;
+		m_listSavedTasks.RemoveData(pItem);
+		return true;
+	}
+
+	return false;
+}
+
+
+const common::listN::ListItem<multi::TaskScheduler::STaskItem>* multi::TaskScheduler::firstSavedTask()const
+{
+	return m_listSavedTasks.first();
 }
